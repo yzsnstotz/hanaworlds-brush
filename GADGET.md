@@ -92,3 +92,14 @@ Install from the public origin into a DSH profile, e.g.
 `dsh plugin --profile <profile> add https://codeload.github.com/yzsnstotz/hanaworlds-brush/tar.gz/<revision>`.
 Brush keeps no state, so uninstall leaves nothing to preserve and rollback is
 reinstalling the previous revision; Canvas history and world state are untouched.
+
+**Open install gate (`BRUSH-INSTALL-EXOTIC-001`).** The DSH 0.2.0-rc.2 plugin
+manager runs pnpm 11.7.0, whose default `blockExoticSubdeps` rejects Brush's
+URL-pinned `hanaworlds-contracts` dependency (`ERR_PNPM_EXOTIC_SUBDEP`), because
+contracts 0.2.1 is not on a registry. A stock profile therefore cannot install
+Brush yet. Pre-installing contracts as a direct profile dependency does not help.
+Install, load, restart, uninstall, reinstall and rollback have been exercised from
+the public origin only in a diagnostic profile with `blockExoticSubdeps: false`.
+The resolution (bundle the admitted contracts bytes, an authorized registry
+publication, or a visible host policy) is a cross-component decision and is not
+made by this package.
