@@ -1,0 +1,41 @@
+{
+  "name": "hanaworlds-brush",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "description": "HanaWorlds Stage 1 Brush: pure deterministic BUILD/V2 to operations/v2 compiler (no world connection or mutation)",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yzsnstotz/hanaworlds-brush.git"
+  },
+  "engines": {
+    "node": ">=24.13.1 <25"
+  },
+  "exports": {
+    ".": "./src/index.mjs",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "src/",
+    "cordis.patch.yml",
+    "GADGET.md",
+    "NOTICE",
+    "LICENSE",
+    "README.md"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "scripts": {
+    "build": "node --check src/index.mjs && node --check src/compile.mjs && node --check src/expand.mjs",
+    "test": "node --test test/*.test.mjs",
+    "verify:contracts": "node tools/verify-contracts-artifact.mjs",
+    "pack:artifact": "npm pack --ignore-scripts --pack-destination artifacts --json"
+  },
+  "dependencies": {
+    "hanaworlds-contracts": "https://codeload.github.com/yzsnstotz/hanaworlds-contracts/tar.gz/5ecfce1ba47530b42bba60a674bd16f7bc39c665"
+  }
+}
