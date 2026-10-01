@@ -1,8 +1,8 @@
 // Test-only builders. Digests come from the admitted contracts package and the
 // expected effects from its independent fixture expander, not from Brush.
-import { digestValue, comparePosition } from 'hanaworlds-contracts';
-import { compileFixtureEffects } from 'hanaworlds-contracts/fixture';
-import wire from 'hanaworlds-contracts/fixtures/wire-inputs' with { type: 'json' };
+import { digestValue, comparePosition } from '#contracts';
+import { compileFixtureEffects } from '#contracts/fixture';
+import wire from '#contracts/fixtures/wire-inputs' with { type: 'json' };
 
 export const wireRequest = () => structuredClone(wire.requests.find(r => r.id === 'WIRE-BUILD-V2').request);
 

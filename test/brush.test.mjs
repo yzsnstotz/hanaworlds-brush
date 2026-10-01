@@ -1,11 +1,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
-import { canonicalJSON, ContractError, deepFreeze } from 'hanaworlds-contracts';
-import * as operationsV2 from 'hanaworlds-contracts/operations/v2';
-import * as buildV2 from 'hanaworlds-contracts/BUILD/V2';
-import goldens from 'hanaworlds-contracts/fixtures/production-goldens' with { type: 'json' };
-import closure from 'hanaworlds-contracts/fixtures/closure-oracles' with { type: 'json' };
+import { canonicalJSON, ContractError, deepFreeze } from '#contracts';
+import * as operationsV2 from '#contracts/operations/v2';
+import * as buildV2 from '#contracts/BUILD/V2';
+import goldens from '#contracts/fixtures/production-goldens' with { type: 'json' };
+import closure from '#contracts/fixtures/closure-oracles' with { type: 'json' };
 import plugin, { compileBuildDocument, compileBuildDocumentBytes, BrushV2, apply, invariants } from '../src/index.mjs';
 import { makeRequest, wireRequest, catalogue, box, compileFixtureEffects } from './helpers.mjs';
 
@@ -263,7 +263,7 @@ test('source has no world, network, filesystem, process, clock or randomness acc
   for (const file of readdirSync(dir)) {
     const text = readFileSync(new URL(file, dir), 'utf8');
     const imports = [...text.matchAll(/from '([^']+)'/g)].map(m => m[1]);
-    for (const spec of imports) assert.ok(spec.startsWith('./') || spec.startsWith('hanaworlds-contracts'), `${file} imports ${spec}`);
+    for (const spec of imports) assert.ok(spec.startsWith('./') || spec === '#contracts' || spec.startsWith('#contracts/'), `${file} imports ${spec}`);
     assert.doesNotMatch(text, /\b(require\(|import\(|fetch\(|Date\.|Math\.random|setTimeout|setInterval|child_process|node:fs|node:net|node:http|WebSocket)/, file);
   }
 });
@@ -281,4 +281,15 @@ test('DSH plugin provides exactly the hanaworldsBrushV2 service and nothing else
   assert.equal(status.contracts, 'hanaworlds-contracts@0.2.1');
   assert.equal(status.invariants, invariants);
   assert.equal(provided[0][1].compile(wireRequest()).result.operationDigest, closure.cases.find(c => c.id === 'BU-02-VALID').expected.sha256);
+});
+
+test('#contracts resolves only to the bundled admitted contracts 0.2.1 copy inside this package', async () => {
+  const root = new URL('../', import.meta.url).href;
+  for (const spec of ['#contracts', '#contracts/BUILD/V2', '#contracts/operations/v2']) {
+    assert.ok(import.meta.resolve(spec).startsWith(root + 'vendor/hanaworlds-contracts/dist/'), spec);
+  }
+  const vendored = JSON.parse(readFileSync(new URL('../vendor/hanaworlds-contracts/package.json', import.meta.url), 'utf8'));
+  assert.deepEqual([vendored.name, vendored.version, vendored.dependencies], ['hanaworlds-contracts', '0.2.1', { canonicalize: '5.1.0' }]);
+  const own = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
+  assert.deepEqual(own.dependencies, { canonicalize: '5.1.0' });
 });

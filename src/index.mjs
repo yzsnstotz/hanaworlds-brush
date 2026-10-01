@@ -5,7 +5,7 @@
 // to a world, writes a world, persists, calls a model or chooses a target.
 // Canvas independently authorizes and applies compiled operations.
 
-import { version as contractsVersion } from 'hanaworlds-contracts';
+import { version as contractsVersion } from '#contracts';
 import { compileBuildDocument, compileBuildDocumentBytes, hostCapabilities } from './compile.mjs';
 
 export { compileBuildDocument, compileBuildDocumentBytes, hostCapabilities };

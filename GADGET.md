@@ -26,6 +26,15 @@ Luanti Adapter. A Brush result never grants world permission.
 - Public ports only: `hanaworlds-contracts@0.2.1` `./BUILD/V2` and `./operations/v2`
   (plus its root runtime helpers). No dependency on Canvas, Workshop, painter or
   Adapter internals.
+- Contracts are **bundled**: `vendor/hanaworlds-contracts/` is exactly the
+  `package/` contents of the independently admitted artifact
+  (`5ecfce1`, SHA-256 `d91b8950…`, 582 entries), reached only through the package
+  `imports` map (`#contracts`, `#contracts/BUILD/V2`, `#contracts/operations/v2`).
+  The only installed dependency is `canonicalize@5.1.0` from the npm registry.
+  `npm run verify:contracts` repacks the bundled copy (or any installed copy given
+  as an argument) and fails unless the digest, entry count and bytes match;
+  `npm run vendor:contracts` is the maintainer path to recreate it from the pinned
+  public source.
 
 ## Compile order
 
@@ -93,13 +102,7 @@ Install from the public origin into a DSH profile, e.g.
 Brush keeps no state, so uninstall leaves nothing to preserve and rollback is
 reinstalling the previous revision; Canvas history and world state are untouched.
 
-**Open install gate (`BRUSH-INSTALL-EXOTIC-001`).** The DSH 0.2.0-rc.2 plugin
-manager runs pnpm 11.7.0, whose default `blockExoticSubdeps` rejects Brush's
-URL-pinned `hanaworlds-contracts` dependency (`ERR_PNPM_EXOTIC_SUBDEP`), because
-contracts 0.2.1 is not on a registry. A stock profile therefore cannot install
-Brush yet. Pre-installing contracts as a direct profile dependency does not help.
-Install, load, restart, uninstall, reinstall and rollback have been exercised from
-the public origin only in a diagnostic profile with `blockExoticSubdeps: false`.
-The resolution (bundle the admitted contracts bytes, an authorized registry
-publication, or a visible host policy) is a cross-component decision and is not
-made by this package.
+Because contracts are bundled, Brush has no URL, git or `file:` subdependency, so a
+stock DSH profile (pnpm 11 default `blockExoticSubdeps`) installs it unchanged.
+Revisions before the bundling change (`c7c9793`, `35da511`) used a URL-pinned
+contracts dependency and fail on a stock profile with `ERR_PNPM_EXOTIC_SUBDEP`.

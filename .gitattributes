@@ -1,0 +1,2 @@
+# Bundled admitted contracts artifact: bytes must never be EOL-converted.
+vendor/** -text

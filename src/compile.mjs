@@ -9,8 +9,8 @@ import {
   ContractError, validateBoundRequest, digestValue, validateFactsCoverage,
   validateStaticMaterials, validateWitnessCoherence, unionCellCount, comparePosition,
   operationContracts,
-} from 'hanaworlds-contracts';
-import * as buildV2 from 'hanaworlds-contracts/BUILD/V2';
+} from '#contracts';
+import * as buildV2 from '#contracts/BUILD/V2';
 import { expandEffects, unionBounds } from './expand.mjs';
 
 const WIRE = 'BUILD/V2';

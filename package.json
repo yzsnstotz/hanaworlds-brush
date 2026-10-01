@@ -16,8 +16,16 @@
     ".": "./src/index.mjs",
     "./package.json": "./package.json"
   },
+  "imports": {
+    "#contracts": "./vendor/hanaworlds-contracts/dist/index.mjs",
+    "#contracts/BUILD/V2": "./vendor/hanaworlds-contracts/dist/bindings/BUILD-V2.mjs",
+    "#contracts/operations/v2": "./vendor/hanaworlds-contracts/dist/bindings/operations-v2.mjs",
+    "#contracts/fixture": "./vendor/hanaworlds-contracts/dist/fixture.mjs",
+    "#contracts/fixtures/*": "./vendor/hanaworlds-contracts/fixtures/candidate/*.json"
+  },
   "files": [
     "src/",
+    "vendor/",
     "cordis.patch.yml",
     "GADGET.md",
     "NOTICE",
@@ -33,9 +41,10 @@
     "build": "node --check src/index.mjs && node --check src/compile.mjs && node --check src/expand.mjs",
     "test": "node --test test/*.test.mjs",
     "verify:contracts": "node tools/verify-contracts-artifact.mjs",
-    "pack:artifact": "npm pack --ignore-scripts --pack-destination artifacts --json"
+    "pack:artifact": "npm pack --ignore-scripts --pack-destination artifacts --json",
+    "vendor:contracts": "node tools/vendor-contracts.mjs"
   },
   "dependencies": {
-    "hanaworlds-contracts": "https://codeload.github.com/yzsnstotz/hanaworlds-contracts/tar.gz/5ecfce1ba47530b42bba60a674bd16f7bc39c665"
+    "canonicalize": "5.1.0"
   }
 }
