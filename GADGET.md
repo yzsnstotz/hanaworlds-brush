@@ -105,4 +105,16 @@ reinstalling the previous revision; Canvas history and world state are untouched
 Because contracts are bundled, Brush has no URL, git or `file:` subdependency, so a
 stock DSH profile (pnpm 11 default `blockExoticSubdeps`) installs it unchanged.
 Revisions before the bundling change (`c7c9793`, `35da511`) used a URL-pinned
-contracts dependency and fail on a stock profile with `ERR_PNPM_EXOTIC_SUBDEP`.
+contracts dependency and fail on a stock profile with `ERR_PNPM_EXOTIC_SUBDEP`;
+they are therefore not valid rollback targets on a stock host. The earliest
+stock-installable revision is the bundling commit `7a34ac1`.
+
+Lifecycle on a stock profile:
+
+- install / upgrade / rollback: `dsh plugin --profile <p> add <codeload URL of the revision>`
+  replaces the installed revision in place; the profile `dsh.profile.bundles`
+  entry `hanaworlds-brush` stays;
+- uninstall: `dsh plugin --profile <p> remove hanaworlds-brush` removes the package,
+  `canonicalize` and the bundles entry; Brush leaves no state of its own;
+- check an installed copy: `node tools/verify-contracts-artifact.mjs
+  <profile>/node_modules/hanaworlds-brush/vendor/hanaworlds-contracts`.
