@@ -1,10 +1,10 @@
 // The one independently admitted contracts artifact Brush may bundle.
 export const ADMITTED_CONTRACTS = Object.freeze({
   name: 'hanaworlds-contracts',
-  version: '0.2.1',
+  version: '0.3.0',
   source: 'https://github.com/yzsnstotz/hanaworlds-contracts',
-  revision: '5ecfce1ba47530b42bba60a674bd16f7bc39c665',
-  sourceTarball: 'https://codeload.github.com/yzsnstotz/hanaworlds-contracts/tar.gz/5ecfce1ba47530b42bba60a674bd16f7bc39c665',
-  sha256: 'd91b8950a07d6f5fb2a3b8b614c3157487e2e67e2b108a6599a2e05d0b452945',
-  entries: 582,
+  revision: 'e82735780bdfd4ea8e662781455040a6e5306121',
+  sourceTarball: 'https://codeload.github.com/yzsnstotz/hanaworlds-contracts/tar.gz/e82735780bdfd4ea8e662781455040a6e5306121',
+  sha256: '47a2e5cc77590fb471ffedde715682564e169a0d88dbc5005b71d8d542b38f5c',
+  entries: 923,
 });

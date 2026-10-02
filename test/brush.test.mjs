@@ -102,7 +102,7 @@ test('byte-identical output for identical input, value and raw-bytes entrypoints
   assert.equal(a, b); assert.equal(a, c); assert.equal(a, d);
 });
 
-test('observed contracts@0.2.1 behaviour: a Box written {max,min} is rejected typed (reported to PM, not masked)', () => {
+test('observed contracts behaviour (0.2.1 and 0.3.0): a Box written {max,min} is rejected typed (reported to PM, not masked)', () => {
   const req = makeRequest({ operations: [box([0, 0, 0], [1, 0, 0])] });
   const reordered = { ...req, build: { ...req.build, declaredBounds: { max: req.build.declaredBounds.max, min: req.build.declaredBounds.min } } };
   rejects(compileBuildDocument(reordered), 'SCHEMA_INVALID', 'INVALID_SHAPE');
@@ -278,18 +278,18 @@ test('DSH plugin provides exactly the hanaworldsBrushV2 service and nothing else
   assert.deepEqual(plugin.inject, []);
   const status = provided[0][1].status();
   assert.equal(status.worldAccess, 'NONE');
-  assert.equal(status.contracts, 'hanaworlds-contracts@0.2.1');
+  assert.equal(status.contracts, 'hanaworlds-contracts@0.3.0');
   assert.equal(status.invariants, invariants);
   assert.equal(provided[0][1].compile(wireRequest()).result.operationDigest, closure.cases.find(c => c.id === 'BU-02-VALID').expected.sha256);
 });
 
-test('#contracts resolves only to the bundled admitted contracts 0.2.1 copy inside this package', async () => {
+test('#contracts resolves only to the bundled admitted contracts 0.3.0 (v4 lane) copy inside this package', async () => {
   const root = new URL('../', import.meta.url).href;
   for (const spec of ['#contracts', '#contracts/BUILD/V2', '#contracts/operations/v2']) {
-    assert.ok(import.meta.resolve(spec).startsWith(root + 'vendor/hanaworlds-contracts/dist/'), spec);
+    assert.ok(import.meta.resolve(spec).startsWith(root + 'vendor/hanaworlds-contracts/dist/v4/'), spec);
   }
   const vendored = JSON.parse(readFileSync(new URL('../vendor/hanaworlds-contracts/package.json', import.meta.url), 'utf8'));
-  assert.deepEqual([vendored.name, vendored.version, vendored.dependencies], ['hanaworlds-contracts', '0.2.1', { canonicalize: '5.1.0' }]);
+  assert.deepEqual([vendored.name, vendored.version, vendored.dependencies], ['hanaworlds-contracts', '0.3.0', { canonicalize: '5.1.0' }]);
   const own = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
   assert.deepEqual(own.dependencies, { canonicalize: '5.1.0' });
 });

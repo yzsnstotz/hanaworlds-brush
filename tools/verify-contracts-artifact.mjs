@@ -1,6 +1,6 @@
 // Verify that vendor/hanaworlds-contracts (or the directory given as argv[2],
 // e.g. an installed copy) is byte-for-byte the independently admitted
-// hanaworlds-contracts 0.2.1 artifact: repack it with npm (deterministic tar)
+// hanaworlds-contracts artifact named in tools/admitted-contracts.mjs: repack it with npm (deterministic tar)
 // and compare SHA-256, then require the directory to contain exactly the
 // packed files with identical bytes. Exit 0 only on an exact match.
 import { execFileSync } from 'node:child_process';

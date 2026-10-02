@@ -1,6 +1,6 @@
 {
   "name": "hanaworlds-brush",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "license": "MIT",
@@ -17,11 +17,11 @@
     "./package.json": "./package.json"
   },
   "imports": {
-    "#contracts": "./vendor/hanaworlds-contracts/dist/index.mjs",
-    "#contracts/BUILD/V2": "./vendor/hanaworlds-contracts/dist/bindings/BUILD-V2.mjs",
-    "#contracts/operations/v2": "./vendor/hanaworlds-contracts/dist/bindings/operations-v2.mjs",
-    "#contracts/fixture": "./vendor/hanaworlds-contracts/dist/fixture.mjs",
-    "#contracts/fixtures/*": "./vendor/hanaworlds-contracts/fixtures/candidate/*.json"
+    "#contracts": "./vendor/hanaworlds-contracts/dist/v4/index.mjs",
+    "#contracts/BUILD/V2": "./vendor/hanaworlds-contracts/dist/v4/bindings/BUILD-V2.mjs",
+    "#contracts/operations/v2": "./vendor/hanaworlds-contracts/dist/v4/bindings/operations-v2.mjs",
+    "#contracts/fixture": "./vendor/hanaworlds-contracts/dist/v4/fixture.mjs",
+    "#contracts/fixtures/*": "./vendor/hanaworlds-contracts/fixtures/v4/candidate/*.json"
   },
   "files": [
     "src/",

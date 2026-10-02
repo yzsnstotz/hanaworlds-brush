@@ -2,7 +2,8 @@
 // no persistence, no model access, no clock, no randomness.
 //
 // Every public type, digest and coherence rule comes from the admitted
-// hanaworlds-contracts@0.2.1 package; this module only orders those checks
+// hanaworlds-contracts@0.3.0 package (v4 lane, which admits target-facts/v3
+// REGION_INSPECTED facts); this module only orders those checks
 // along the frozen BuildDocument validationOrder and performs the expansion.
 
 import {
@@ -40,8 +41,21 @@ function stage(request) {
   check(facts.catalogueDigest === request.catalogueDigest, 'CATALOGUE_MISMATCH', 'CATALOGUE_UNRESOLVED');
   const frameDigest = digestValue('frame', build.coordinateFrame).sha256;
   check(facts.frameDigest === frameDigest, 'NON_CANONICAL_AMBIGUITY', 'PAYLOAD_CHANGED');
-  if (facts.source === 'INSPECTED') check(facts.worldRef === request.worldRef, 'TARGET_FACTS_STALE', 'REVISION_CHANGED');
-  else check(facts.buildDigest !== request.buildDigest, 'NON_CANONICAL_AMBIGUITY', 'PAYLOAD_CHANGED');
+  // INSPECTED and REGION_INSPECTED (target-facts/v3, a first building's inspected
+  // region) are both observed world facts bound to the request world. Only
+  // PLANNED facts describe a preceding plan; REGION_INSPECTED is never PLANNED.
+  switch (facts.source) {
+    case 'INSPECTED':
+    case 'REGION_INSPECTED':
+      check(facts.worldRef === request.worldRef, 'TARGET_FACTS_STALE', 'REVISION_CHANGED');
+      break;
+    case 'PLANNED':
+      check(facts.buildDigest !== request.buildDigest, 'NON_CANONICAL_AMBIGUITY', 'PAYLOAD_CHANGED');
+      break;
+    default:
+      // unreachable after the contracts FactsSource schema; never default to PLANNED
+      fail('SCHEMA_INVALID', 'INVALID_SHAPE', 'decode');
+  }
   const sampledPositions = [...facts.occupiedCells.map(c => c.position), ...facts.knownEmptyCells,
     ...facts.unknownCells.map(c => c.position)].sort(comparePosition);
   validateFactsCoverage(facts, { profileVersion: 'coverage/v2', sampledBounds: facts.sampledBounds, sampledPositions });

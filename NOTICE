@@ -5,12 +5,12 @@ package/plugin metadata) is licensed under the MIT License (see LICENSE).
 
 Bundled third-party software (vendor/, unmodified):
 
-- hanaworlds-contracts 0.2.1 — MIT
+- hanaworlds-contracts 0.3.0 — MIT
   Path: vendor/hanaworlds-contracts/ (its own LICENSE, NOTICE and licenses/ are kept)
   Source: https://github.com/yzsnstotz/hanaworlds-contracts
-  Revision: 5ecfce1ba47530b42bba60a674bd16f7bc39c665
-  Admitted artifact SHA-256: d91b8950a07d6f5fb2a3b8b614c3157487e2e67e2b108a6599a2e05d0b452945
-  The directory is exactly the 582-entry `package/` contents of that artifact;
+  Revision: e82735780bdfd4ea8e662781455040a6e5306121
+  Admitted artifact SHA-256: 47a2e5cc77590fb471ffedde715682564e169a0d88dbc5005b71d8d542b38f5c
+  The directory is exactly the 923-entry `package/` contents of that artifact;
   `npm run verify:contracts` repacks it and requires the same SHA-256.
   Use: public BUILD/V2 and operations/v2 types, strict decode, schema, digests and coherence checks.
 
