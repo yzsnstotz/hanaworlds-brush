@@ -34,6 +34,32 @@ const fail = (code, reason, phase = 'validate') => { throw new ContractError(cod
 const check = (condition, code, reason, phase) => { if (!condition) fail(code, reason, phase); };
 const key = p => `${p[0]},${p[1]},${p[2]}`;
 
+/**
+ * Internal (not a package export): bind target facts to the request by source.
+ * INSPECTED and REGION_INSPECTED (target-facts/v3, a first building's inspected
+ * region) are both observed world facts bound to the request world. Only
+ * PLANNED facts describe a preceding plan; REGION_INSPECTED is never PLANNED.
+ * contracts@0.3.0 validateBoundRequest enforces the same world binding first;
+ * this is Brush's own binding and is unit-tested directly.
+ */
+export function bindFactsSource(facts, request) {
+  switch (facts.source) {
+    case 'INSPECTED':
+    case 'REGION_INSPECTED':
+      check(facts.worldRef === request.worldRef, 'TARGET_FACTS_STALE', 'REVISION_CHANGED');
+      break;
+    case 'PLANNED':
+      // Cycle guard: unreachable with bound digests (request.buildDigest covers
+      // targetFactsDigest, which covers facts.buildDigest); kept as defence in depth.
+      check(facts.buildDigest !== request.buildDigest, 'NON_CANONICAL_AMBIGUITY', 'PAYLOAD_CHANGED');
+      break;
+    default:
+      // Mirrors the contracts FactsSource decode rejection (hence phase decode);
+      // unreachable after validateBoundRequest. Never defaults to PLANNED.
+      fail('SCHEMA_INVALID', 'INVALID_SHAPE', 'decode');
+  }
+}
+
 function stage(request) {
   const { build, catalogue, targetFacts: facts } = request;
 
@@ -41,21 +67,7 @@ function stage(request) {
   check(facts.catalogueDigest === request.catalogueDigest, 'CATALOGUE_MISMATCH', 'CATALOGUE_UNRESOLVED');
   const frameDigest = digestValue('frame', build.coordinateFrame).sha256;
   check(facts.frameDigest === frameDigest, 'NON_CANONICAL_AMBIGUITY', 'PAYLOAD_CHANGED');
-  // INSPECTED and REGION_INSPECTED (target-facts/v3, a first building's inspected
-  // region) are both observed world facts bound to the request world. Only
-  // PLANNED facts describe a preceding plan; REGION_INSPECTED is never PLANNED.
-  switch (facts.source) {
-    case 'INSPECTED':
-    case 'REGION_INSPECTED':
-      check(facts.worldRef === request.worldRef, 'TARGET_FACTS_STALE', 'REVISION_CHANGED');
-      break;
-    case 'PLANNED':
-      check(facts.buildDigest !== request.buildDigest, 'NON_CANONICAL_AMBIGUITY', 'PAYLOAD_CHANGED');
-      break;
-    default:
-      // unreachable after the contracts FactsSource schema; never default to PLANNED
-      fail('SCHEMA_INVALID', 'INVALID_SHAPE', 'decode');
-  }
+  bindFactsSource(facts, request);
   const sampledPositions = [...facts.occupiedCells.map(c => c.position), ...facts.knownEmptyCells,
     ...facts.unknownCells.map(c => c.position)].sort(comparePosition);
   validateFactsCoverage(facts, { profileVersion: 'coverage/v2', sampledBounds: facts.sampledBounds, sampledPositions });

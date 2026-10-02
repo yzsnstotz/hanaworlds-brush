@@ -19,9 +19,10 @@ export const serviceName = 'hanaworldsBrushV2';
  * ContractHandshake this provider advertises before any request: exactly the
  * admitted contracts@0.3.0 set (wire majors, operations/v2 and the fact
  * profiles target-facts/v2 + target-facts/v3). A consumer checks it with
- * contracts `checkContractHandshake`; a contracts@0.2.1 peer advertises
- * target-facts/v2 and the older wire majors only, so a 0.3.0 consumer that
- * requires target-facts/v3 (or a v3/v4 wire) fails with
+ * contracts `checkContractHandshake`. Brush 0.1.0 (contracts@0.2.1) advertises
+ * no handshake, which a 0.3.0 consumer must treat as UNSUPPORTED_VERSION; a
+ * contracts@0.2.1 advertisement (target-facts/v2 and the older wire majors only)
+ * fails a consumer that requires target-facts/v3 or a v3/v4 wire with
  * UNSUPPORTED_VERSION/decode before a request is sent.
  */
 export { contractHandshake };

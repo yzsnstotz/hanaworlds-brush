@@ -7,6 +7,7 @@ import * as buildV2 from '#contracts/BUILD/V2';
 import chain from '#contracts/fixtures/placement-region-chain-v4' with { type: 'json' };
 import goldens from '#contracts/fixtures/production-goldens' with { type: 'json' };
 import { compileBuildDocument, compileBuildDocumentBytes, contractHandshake, BrushV2 } from '../src/index.mjs';
+import { bindFactsSource } from '../src/compile.mjs';
 import { makeRequest, box } from './helpers.mjs';
 
 const plain = value => JSON.parse(JSON.stringify(value));
@@ -51,7 +52,7 @@ test('chained region compile: the operations bind the request world and the Adap
   assert.equal(result.projection.targetFactsDigest, request.targetFactsDigest);
 });
 
-test('REGION_INSPECTED facts for another world → TARGET_FACTS_STALE (bound exactly like INSPECTED, never accepted as PLANNED)', () => {
+test('REGION_INSPECTED facts for another world → TARGET_FACTS_STALE through the public entrypoint (contracts validateBoundRequest rejects first)', () => {
   const request = brushRequest();
   request.worldRef = 'fixture-other-world';
   rejects(compileBuildDocument(request), 'TARGET_FACTS_STALE', 'REVISION_CHANGED');
@@ -69,7 +70,7 @@ test('REGION_INSPECTED and INSPECTED facts of the request world compile alike; s
   assert.equal(regioned.result.projection.worldRef, 'fixture-world');
 });
 
-test('PLANNED facts keep their own rule: a foreign world is not checked, but the facts may not describe the same build', () => {
+test('PLANNED facts are not world-bound: a foreign request world compiles through the public entrypoint', () => {
   const planned = { source: 'PLANNED', worldRef: null, objectRef: null, worldRevision: null, objectRevision: null, buildDigest: 'c'.repeat(64), planRevision: 'plan-1' };
   assert.equal(compileBuildDocument(makeRequest({ operations: [box([0, 0, 0], [0, 0, 0])], facts: planned, worldRef: 'any-world' })).error, null);
 });
@@ -109,6 +110,26 @@ test('region witnesses are rechecked: forged Adapter body evidence overlapping a
   const response = compileBuildDocument(makeRequest({ operations, facts: region(),
     witnesses: w => w.map(x => x.predicate === 'BODY_CLEARANCE' ? { ...x, facts: { ...x.facts, bodyOccupiedPositions: [[0, 0, 0]] } } : x) }));
   rejects(response, 'SAFETY_INVARIANT_FAILED', 'REQUIRED_FACT_UNKNOWN');
+});
+
+// ---- Brush's own source binding (internal helper, tested directly) ----------
+
+test('bindFactsSource: REGION_INSPECTED and INSPECTED bind the request world; REGION_INSPECTED is never treated as PLANNED', () => {
+  const stale = e => e instanceof ContractError && e.code === 'TARGET_FACTS_STALE' && e.reason === 'REVISION_CHANGED' && e.phase === 'validate';
+  const request = { worldRef: 'fixture-world', buildDigest: 'b'.repeat(64) };
+  for (const source of ['REGION_INSPECTED', 'INSPECTED']) {
+    assert.doesNotThrow(() => bindFactsSource({ source, worldRef: 'fixture-world', buildDigest: null }, request));
+    assert.throws(() => bindFactsSource({ source, worldRef: 'fixture-other-world', buildDigest: null }, request), stale, source);
+  }
+});
+
+test('bindFactsSource: PLANNED is not world-bound but may not describe the same build; an unknown source is SCHEMA_INVALID, never PLANNED', () => {
+  const request = { worldRef: 'fixture-world', buildDigest: 'b'.repeat(64) };
+  assert.doesNotThrow(() => bindFactsSource({ source: 'PLANNED', worldRef: null, buildDigest: 'c'.repeat(64) }, request));
+  assert.throws(() => bindFactsSource({ source: 'PLANNED', worldRef: null, buildDigest: 'b'.repeat(64) }, request),
+    e => e instanceof ContractError && e.code === 'NON_CANONICAL_AMBIGUITY' && e.reason === 'PAYLOAD_CHANGED');
+  assert.throws(() => bindFactsSource({ source: 'OBSERVED', worldRef: 'fixture-other-world', buildDigest: null }, request),
+    e => e instanceof ContractError && e.code === 'SCHEMA_INVALID' && e.reason === 'INVALID_SHAPE' && e.phase === 'decode');
 });
 
 // ---- BU-09 ContractHandshake --------------------------------------------------

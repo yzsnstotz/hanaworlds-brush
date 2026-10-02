@@ -54,10 +54,12 @@ byte-identical. The BUILD frame must be the Adapter-produced frame the facts nam
 Before any request a consumer checks Brush's advertised `ContractHandshake`
 (`status().contractHandshake`, `handshake()`, export `contractHandshake`) with contracts
 `checkContractHandshake`. Brush advertises exactly the contracts@0.3.0 set: the seven
-wires, `operations/v2` and fact profiles `target-facts/v2` + `target-facts/v3`. A
-contracts@0.2.1 peer such as Brush 0.1.0 advertises `target-facts/v2` only, so a consumer
-that requires `target-facts/v3` fails against it with `UNSUPPORTED_VERSION/decode` and
-sends nothing.
+wires, `operations/v2` and fact profiles `target-facts/v2` + `target-facts/v3`. Brush
+0.1.0 (contracts@0.2.1) advertises no ContractHandshake; a 0.3.0 consumer must treat its
+absence as `UNSUPPORTED_VERSION` and send nothing. The contracts fixture
+`HS-MIXED-BRUSH-FACTS-V2` models a contracts@0.2.1 advertisement (`target-facts/v2`
+only), which fails a consumer that requires `target-facts/v3` with
+`UNSUPPORTED_VERSION/decode`.
 
 Rejections follow the admitted contracts@0.3.0 runtime, which Brush does not remap: a
 digest-binding `NON_CANONICAL_AMBIGUITY/validate/PAYLOAD_CHANGED` now reports retryability
