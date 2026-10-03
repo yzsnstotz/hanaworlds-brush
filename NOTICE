@@ -1,0 +1,27 @@
+HanaWorlds Brush
+Copyright (c) 2026 yzsnstotz
+HanaWorlds-owned source in this repository (src/, test/, tools/ and the
+package/plugin metadata) is licensed under the MIT License (see LICENSE).
+
+Bundled third-party software (vendor/, unmodified):
+
+- hanaworlds-contracts 0.3.0 — MIT
+  Path: vendor/hanaworlds-contracts/ (its own LICENSE, NOTICE and licenses/ are kept)
+  Source: https://github.com/yzsnstotz/hanaworlds-contracts
+  Revision: e82735780bdfd4ea8e662781455040a6e5306121
+  Admitted artifact SHA-256: 47a2e5cc77590fb471ffedde715682564e169a0d88dbc5005b71d8d542b38f5c
+  The directory is exactly the 923-entry `package/` contents of that artifact;
+  `npm run verify:contracts` repacks it and requires the same SHA-256.
+  Use: public BUILD/V2 and operations/v2 types, strict decode, schema, digests and coherence checks.
+
+Third-party software installed as a dependency (not vendored):
+
+- canonicalize 5.1.0 — Apache License 2.0 (required by hanaworlds-contracts)
+  Source: https://github.com/erdtman/canonicalize  (npm: canonicalize@5.1.0)
+  Use: RFC 8785 JSON Canonicalization Scheme for production digests, unmodified.
+  License text: in the installed package (node_modules/canonicalize/LICENSE) and in
+  vendor/hanaworlds-contracts/licenses/canonicalize-Apache-2.0.txt.
+
+Not included: WorldEdit (AGPL-3.0) is the separate Luanti Adapter's external world-edit
+substrate. Brush contains no WorldEdit code, does not reimplement its editing engine and
+never writes to a world.

@@ -1,0 +1,50 @@
+{
+  "name": "hanaworlds-brush",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "description": "HanaWorlds Stage 1 Brush: pure deterministic BUILD/V2 to operations/v2 compiler (no world connection or mutation)",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yzsnstotz/hanaworlds-brush.git"
+  },
+  "engines": {
+    "node": ">=24.13.1 <25"
+  },
+  "exports": {
+    ".": "./src/index.mjs",
+    "./package.json": "./package.json"
+  },
+  "imports": {
+    "#contracts": "./vendor/hanaworlds-contracts/dist/v4/index.mjs",
+    "#contracts/BUILD/V2": "./vendor/hanaworlds-contracts/dist/v4/bindings/BUILD-V2.mjs",
+    "#contracts/operations/v2": "./vendor/hanaworlds-contracts/dist/v4/bindings/operations-v2.mjs",
+    "#contracts/fixture": "./vendor/hanaworlds-contracts/dist/v4/fixture.mjs",
+    "#contracts/fixtures/*": "./vendor/hanaworlds-contracts/fixtures/v4/candidate/*.json"
+  },
+  "files": [
+    "src/",
+    "vendor/",
+    "cordis.patch.yml",
+    "GADGET.md",
+    "NOTICE",
+    "LICENSE",
+    "README.md"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "scripts": {
+    "build": "node --check src/index.mjs && node --check src/compile.mjs && node --check src/expand.mjs",
+    "test": "node --test test/*.test.mjs",
+    "verify:contracts": "node tools/verify-contracts-artifact.mjs",
+    "pack:artifact": "npm pack --ignore-scripts --pack-destination artifacts --json",
+    "vendor:contracts": "node tools/vendor-contracts.mjs"
+  },
+  "dependencies": {
+    "canonicalize": "5.1.0"
+  }
+}
