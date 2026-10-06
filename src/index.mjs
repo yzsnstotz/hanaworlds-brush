@@ -1,11 +1,13 @@
-// Pure current BUILD/V3 compiler. Canvas owns all transaction decisions.
+// Pure current BUILD/V3 compiler plus region voxel block compiler. Canvas owns all transaction decisions.
 import { version as contractsVersion, contractHandshake } from '#contracts';
 import { compileBuildDocument, compileBuildDocumentBytes, hostCapabilities } from './compile.mjs';
 export { compileBuildDocument, compileBuildDocumentBytes, hostCapabilities };
 export { expandEffects } from './expand.mjs';
+import { compileRegion, checkRegionProtocol, regionProtocol, regionCapabilities, REGION_FIXTURE } from './region.mjs';
+export { compileRegion, checkRegionProtocol, regionProtocol, regionCapabilities, chunkCells, UNSPECIFIED, CHUNK_EDGE, AXIS_ORDER, REGION_FIXTURE } from './region.mjs';
 export { contractHandshake };
 export const name = 'hanaworlds-brush';
-export const version = '0.3.1';
+export const version = '0.4.0';
 export const serviceName = 'hanaworldsBrushV3';
 export const invariants = Object.freeze([
  'PURE_COMPILER: no world connection, read/write, persistence, model access, clock or randomness',
@@ -17,14 +19,20 @@ export const invariants = Object.freeze([
  'KNOWN_TARGET_CELLS: unknown or unsampled cells are never air',
  'WITNESS_RECOMPUTE: coverage, body clearance and hazard witnesses checked against exact effects',
  'ZERO_OUTPUT_REJECTION: any failure produces no operations',
+ 'REGION_PURE: region voxel block + palette compiles to deterministic per-chunk palette blocks and digests; no world access',
+ 'EXPLICIT_DIG: only an explicit air palette entry digs; unspecified cells (-1) are never air and never emitted',
+ 'PROTOCOL_MAJOR: region compatibility is same protocol major plus required capabilities; patch/hash never decide; 0.x minor is breaking',
 ]);
 export class BrushV3 {
  status() { return Object.freeze({ component:name, version, input:'BUILD/V3', output:'operations/v3',
   contracts:`hanaworlds-contracts@${contractsVersion}`, worldAccess:'NONE', persistence:'NONE', modelAccess:'NONE',
-  contractHandshake, invariants, hostCapabilities }); }
+  contractHandshake, invariants, hostCapabilities,
+  region: { input:'REGION/V1', output:'region-chunks/v1', protocol: regionProtocol, capabilities: regionCapabilities, boundary: REGION_FIXTURE } }); }
  handshake() { return contractHandshake; }
  compile(request) { return compileBuildDocument(request); }
  compileBytes(bytes) { return compileBuildDocumentBytes(bytes); }
+ regionProtocol(protocol, requiredCapabilities) { return checkRegionProtocol(protocol, requiredCapabilities); }
+ compileRegion(request) { return compileRegion(request); }
 }
 export const inject = [];
 export const provide = serviceName;

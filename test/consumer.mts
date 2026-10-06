@@ -13,5 +13,19 @@ function consume(q:BuildDocumentRequest) {
 }
 void consume;
 
-const packageVersion: "0.3.1" = version;
+const packageVersion: "0.4.0" = version;
 void packageVersion;
+
+import {compileRegion,checkRegionProtocol,chunkCells,UNSPECIFIED,type RegionCompileRequest,type RegionCompileResponse} from 'hanaworlds-brush';
+function consumeRegion(q:RegionCompileRequest) {
+ const out:RegionCompileResponse=compileRegion(q);
+ if(out.error===null){for(const c of out.result.chunks){const d:string=c.chunkDigest;chunkCells(c);void d;}}
+ const service=new BrushV3();service.compileRegion(q);service.regionProtocol({name:'hanaworlds-region',major:1,minor:0});
+ checkRegionProtocol({name:'hanaworlds-region',major:1,minor:3},['explicit-air-dig']);
+ const unspecified:-1=UNSPECIFIED;
+ const regionInput:'REGION/V1'=service.status().region.input;
+ // @ts-expect-error per-cell BUILD wire is not a region request
+ compileRegion({...q,contractVersion:'BUILD/V3'});
+ return {out,unspecified,regionInput};
+}
+void consumeRegion;

@@ -1,4 +1,4 @@
-# Brush 0.3.1 current public boundary
+# Brush 0.4.0 current public boundary
 
 Evidence: SOURCE/FIXTURE. This package has no external runtime of its own.
 Actual pack installation and execution do not prove App/world/model/Undo or
@@ -55,3 +55,33 @@ compiler and expander behavior remain from bc1626a; only exact bundled contract
 identity/handshake and current public declarations change. Use test:image and
 gate-image-contracts.sh for the affected install/type/compile smoke; the original
 nine core checks and complex legacy matrix are retained without rerunning here.
+
+## Region voxel block compile (0.4.0, FIXTURE envelope)
+
+`compileRegion(request)` / `BrushV3.compileRegion` compile a `REGION/V1` request
+(region `region-voxel/v1`: origin, size, axisOrder `x,y,z` = x fastest as Luanti
+VoxelArea, palette of catalogue `NodeSpec`, cells dense or `{encoding:'rle',runs}`)
+into `region-chunks/v1`: Luanti-mapblock-aligned 16³ chunks sorted by numeric
+x/y/z chunk position, each with its used palette (ascending global order), RLE
+cells in mapblock order, specified/air counts and a deterministic chunk digest,
+plus a compiled digest over the ordered chunk digests.
+
+- Dig is only an explicit `air` palette entry. Cell `-1` (`UNSPECIFIED`) leaves
+  the target untouched: it is never air and never emitted. An all-unspecified
+  region is rejected (zero output).
+- Every node must be a static catalogue node with allowed param2; duplicates,
+  wrong axis order, unsafe bounds, wrong world binding, unknown fields, accessors
+  or proxies are rejected with zero output.
+- Compatibility: same protocol major (`hanaworlds-region` 1) plus each required
+  capability (`regionCapabilities`); minor/patch/hash never decide; for major 0
+  the minor is breaking.
+- Brush does not decide load state, lighting, transactions, snapshots or Undo:
+  Adapter transports and Canvas owns the cross-chunk transaction.
+- How to use: the skill chooses region writes for large/terrain edits and the
+  per-cell BUILD path for fine edits; typical size e.g. 256×32×256 cells (2.1M)
+  compiles to 512 chunks in well under a second on a dev machine. Precondition:
+  catalogue and world context of the current connection.
+
+FIXTURE boundary: the envelope names and the digest domain
+`HanaWorlds|brush-region-fixture@v1|` are replaced by the contracts region v1
+public shape/digests once delivered.

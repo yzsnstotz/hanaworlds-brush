@@ -6,7 +6,7 @@ const brush=await import(entry);
 const a=await import(new URL('../vendor/hanaworlds-contracts/dist/local/index.mjs',entry));
 test('final image consumer advertises exact contracts 0.4.2 and refuses old 0.4.0 peers',()=>{
  assert.equal(a.version,'0.4.2');
- assert.equal(brush.version,'0.3.1');
+ assert.equal(brush.version,JSON.parse(readFileSync(new URL('../package.json',entry))).version);
  const service=new brush.BrushV3();
  assert.equal(service.status().contracts,'hanaworlds-contracts@0.4.2');
  assert.equal(a.checkContractHandshake(service.handshake()).result,'HANDSHAKE_VERSION_MATCH');
