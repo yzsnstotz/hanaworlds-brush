@@ -1,7 +1,7 @@
 export const ADMITTED_CONTRACTS = Object.freeze({
-  name: 'hanaworlds-contracts', version: '0.4.2',
+  name: 'hanaworlds-contracts', version: '0.5.0',
   source: 'https://github.com/yzsnstotz/hanaworlds-contracts',
-  revision: 'aad7c0ea2a4a9a93dfb13555c46cd98b9b5da777',
-  sha256: 'c3528a4fc3f0cdf94245c4d2d8b1cfa5d28db96d1cd00ae74737bdbdfcd26ec6',
-  entries: 21,
+  revision: 'c006a839a6e6c2c63d57a14b72e4e6b26fa717f1',
+  sha256: '7fb42f1eaaf4988730f6cf254faecb84bbbb1d84e293558b66727c470181b31e',
+  entries: 24,
 });

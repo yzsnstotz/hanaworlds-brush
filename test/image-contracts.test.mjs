@@ -4,13 +4,13 @@ import {readFileSync} from 'node:fs';
 const entry=import.meta.resolve(process.env.BRUSH_UNDER_TEST ?? '../src/index.mjs');
 const brush=await import(entry);
 const a=await import(new URL('../vendor/hanaworlds-contracts/dist/local/index.mjs',entry));
-test('final image consumer advertises exact contracts 0.4.2 and refuses old 0.4.0 peers',()=>{
- assert.equal(a.version,'0.4.2');
+test('per-cell consumer advertises the exact admitted contracts 0.5.0 handshake and refuses the older 0.4.2 package',()=>{
+ assert.equal(a.version,'0.5.0');
  assert.equal(brush.version,JSON.parse(readFileSync(new URL('../package.json',entry))).version);
  const service=new brush.BrushV3();
- assert.equal(service.status().contracts,'hanaworlds-contracts@0.4.2');
+ assert.equal(service.status().contracts,'hanaworlds-contracts@0.5.0');
  assert.equal(a.checkContractHandshake(service.handshake()).result,'HANDSHAKE_VERSION_MATCH');
- assert.throws(()=>a.checkContractHandshake({...service.handshake(),contracts:'hanaworlds-contracts@0.4.0'}),e=>e.code==='UNSUPPORTED_VERSION');
+ assert.throws(()=>a.checkContractHandshake({...service.handshake(),contracts:'hanaworlds-contracts@0.4.2'}),e=>e.code==='UNSUPPORTED_VERSION');
 });
 test('installed current package compiles the unchanged public BUILD path through library/raw/Cordis',()=>{
  const fixture=JSON.parse(readFileSync(new URL('../vendor/hanaworlds-contracts/fixtures/local/main.json',entry)));

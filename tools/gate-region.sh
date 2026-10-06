@@ -40,6 +40,6 @@ cp "$work/source/test/region.test.mjs" "$work/source/test/image-contracts.test.m
 BRUSH_UNDER_TEST=hanaworlds-brush node --test region.test.mjs image-contracts.test.mjs > "$evidence/consumer-tests.log" 2>&1
 "$work/source/node_modules/.bin/tsc" --noEmit --strict --module nodenext --moduleResolution nodenext --target es2022 consumer.mts > "$evidence/consumer-types.log" 2>&1
 node "$work/source/tools/verify-contracts-artifact.mjs" "$work/consumer/node_modules/hanaworlds-brush/vendor/hanaworlds-contracts" > "$evidence/consumer-contracts.log" 2>&1
-node --input-type=module -e 'import {BrushV3,version} from "hanaworlds-brush"; console.log(JSON.stringify({resolved:import.meta.resolve("hanaworlds-brush"),version,status:new BrushV3().status(),evidence:"SOURCE/FIXTURE; region envelope FIXTURE pending contracts region v1",worldWrites:0}))' > "$evidence/consumer-identity.json"
+node --input-type=module -e 'import {BrushV3,version} from "hanaworlds-brush"; console.log(JSON.stringify({resolved:import.meta.resolve("hanaworlds-brush"),version,status:new BrushV3().status(),evidence:"SOURCE/FIXTURE; contracts 0.5.0 public region fixture",worldWrites:0}))' > "$evidence/consumer-identity.json"
 cat "$evidence/source-tests.log" "$evidence/consumer-tests.log" "$evidence/tar.sha256"
 echo 'SOURCE/FIXTURE gate completed; App/model/world/Undo NOT_RUN; temporary archive, consumer and caches removed on exit.'

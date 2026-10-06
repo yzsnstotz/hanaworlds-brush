@@ -1,4 +1,4 @@
-# Brush 0.4.0 current public boundary
+# Brush 0.5.0 current public boundary
 
 Evidence: SOURCE/FIXTURE. This package has no external runtime of its own.
 Actual pack installation and execution do not prove App/world/model/Undo or
@@ -56,32 +56,32 @@ identity/handshake and current public declarations change. Use test:image and
 gate-image-contracts.sh for the affected install/type/compile smoke; the original
 nine core checks and complex legacy matrix are retained without rerunning here.
 
-## Region voxel block compile (0.4.0, FIXTURE envelope)
+## Region compile (0.5.0, contracts region v1)
 
-`compileRegion(request)` / `BrushV3.compileRegion` compile a `REGION/V1` request
-(region `region-voxel/v1`: origin, size, axisOrder `x,y,z` = x fastest as Luanti
-VoxelArea, palette of catalogue `NodeSpec`, cells dense or `{encoding:'rle',runs}`)
-into `region-chunks/v1`: Luanti-mapblock-aligned 16³ chunks sorted by numeric
-x/y/z chunk position, each with its used palette (ascending global order), RLE
-cells in mapblock order, specified/air counts and a deterministic chunk digest,
-plus a compiled digest over the ordered chunk digests.
+`compileRegionBuild(request)` / `compileRegionBuildBytes(Uint8Array)` /
+`BrushV3.compileRegion(Bytes)` implement contracts `region-build/v1
+CompileRegionBuild`. The `region-voxels/v1` build block is split with the public
+`regionChunksOfBox` into Luanti mapblocks (16³, ascending x,y,z); each chunk is
+the build clipped to that mapblock, canonically re-encoded with the public
+`encodeRegionBlock` (sorted used palette, canonical runs). `writeBounds` is the
+union of the emitted chunk boxes; `operationDigest` is the contracts
+`region-operations` digest (protocol domain, independent of package version).
 
-- Dig is only an explicit `air` palette entry. Cell `-1` (`UNSPECIFIED`) leaves
-  the target untouched: it is never air and never emitted. An all-unspecified
-  region is rejected (zero output).
-- Every node must be a static catalogue node with allowed param2; duplicates,
-  wrong axis order, unsafe bounds, wrong world binding, unknown fields, accessors
-  or proxies are rejected with zero output.
-- Compatibility: same protocol major (`hanaworlds-region` 1) plus each required
-  capability (`regionCapabilities`); minor/patch/hash never decide; for major 0
-  the minor is breaking.
+- Carve is only the explicit `{air,0}` palette entry; `null` (UNSPECIFIED) stays
+  `null` and is never air. A mapblock with no specified cell emits no chunk.
+- Request admission is the public `validateCompileRegionBuildRequest` (schema,
+  build/catalogue digest binding, world binding, static palette); every success
+  also passes the public `validateCompiledRegionSet` exact equivalence before
+  it is returned. Failures are typed responses with zero chunks.
+- Compatibility: `protocolHandshake` (`protocol-handshake/v1`) advertises
+  `BUILD` major 3 and `region-build` major 1 with capabilities
+  `BUILD/V3:per-cell-compile` and `region-build/v1:compile-mapblock-chunks`.
+  Consumers decide with `checkProtocolCompatibility`; package version is
+  provenance only. The per-cell `contractHandshake` stays exact-package.
 - Brush does not decide load state, lighting, transactions, snapshots or Undo:
   Adapter transports and Canvas owns the cross-chunk transaction.
-- How to use: the skill chooses region writes for large/terrain edits and the
-  per-cell BUILD path for fine edits; typical size e.g. 256×32×256 cells (2.1M)
-  compiles to 512 chunks in well under a second on a dev machine. Precondition:
-  catalogue and world context of the current connection.
-
-FIXTURE boundary: the envelope names and the digest domain
-`HanaWorlds|brush-region-fixture@v1|` are replaced by the contracts region v1
-public shape/digests once delivered.
+- Use: the skill picks region writes for large fills/carves (terrain, levelling,
+  digging) and the per-cell BUILD path for fine edits; it is the skill's choice,
+  Brush has no threshold or setting. Observed on a dev machine: 256×32×256
+  (2,097,152 cells) → 512 chunks in about 4 s, most of it inside the contracts
+  validators. Precondition: the current connection's catalogue and world context.

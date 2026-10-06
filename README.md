@@ -1,11 +1,10 @@
 # HanaWorlds Brush
 
-Pure deterministic `BUILD/V3` → `operations/v3` per-cell compiler and region
-voxel block + palette → per-chunk (16³) palette block compiler, packaged as a
-Cordis plugin providing `hanaworldsBrushV3`. No world connection, writes,
-persistence or model access. Candidate **0.4.0**, contracts **0.4.2**; the region
-envelope is an explicit Brush-local FIXTURE until contracts region v1 is
-delivered. SOURCE/FIXTURE component only. App, model, world and Undo product gates remain unproven.
+Pure deterministic `BUILD/V3` → `operations/v3` per-cell compiler and
+`region-build/v1` `CompileRegionBuild` → mapblock-aligned `region-operations/v1`
+compiler, packaged as a Cordis plugin providing `hanaworldsBrushV3`. No world
+connection, writes, persistence or model access. Candidate **0.5.0**, contracts
+**0.5.0**; SOURCE/FIXTURE component only. App, model, world and Undo product gates remain unproven.
 
 ```sh
 npm ci --ignore-scripts

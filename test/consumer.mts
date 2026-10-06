@@ -13,19 +13,19 @@ function consume(q:BuildDocumentRequest) {
 }
 void consume;
 
-const packageVersion: "0.4.0" = version;
+const packageVersion: "0.5.0" = version;
 void packageVersion;
 
-import {compileRegion,checkRegionProtocol,chunkCells,UNSPECIFIED,type RegionCompileRequest,type RegionCompileResponse} from 'hanaworlds-brush';
-function consumeRegion(q:RegionCompileRequest) {
- const out:RegionCompileResponse=compileRegion(q);
- if(out.error===null){for(const c of out.result.chunks){const d:string=c.chunkDigest;chunkCells(c);void d;}}
- const service=new BrushV3();service.compileRegion(q);service.regionProtocol({name:'hanaworlds-region',major:1,minor:0});
- checkRegionProtocol({name:'hanaworlds-region',major:1,minor:3},['explicit-air-dig']);
- const unspecified:-1=UNSPECIFIED;
- const regionInput:'REGION/V1'=service.status().region.input;
+import {compileRegionBuild,compileRegionBuildBytes,protocolHandshake,type CompileRegionBuildRequest,type CompileRegionBuildResponse,type ProtocolHandshake} from 'hanaworlds-brush';
+function consumeRegion(q:CompileRegionBuildRequest) {
+ const out:CompileRegionBuildResponse=compileRegionBuild(q);
+ if(out.result!==null){for(const c of out.result.projection.chunks){const edge:16=out.result.projection.chunkEdge;void c.block.runs;void edge;}}
+ compileRegionBuildBytes(new Uint8Array());
+ const service=new BrushV3();service.compileRegion(q);service.compileRegionBytes(new Uint8Array());
+ const hs:ProtocolHandshake=service.protocolHandshake();const same:ProtocolHandshake=protocolHandshake;
+ const regionInput:'region-build/v1'=service.status().region.input;
  // @ts-expect-error per-cell BUILD wire is not a region request
- compileRegion({...q,contractVersion:'BUILD/V3'});
- return {out,unspecified,regionInput};
+ compileRegionBuild({...q,contractVersion:'BUILD/V3'});
+ return {out,hs,same,regionInput};
 }
 void consumeRegion;
