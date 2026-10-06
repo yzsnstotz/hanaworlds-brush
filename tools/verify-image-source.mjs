@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {execFileSync} from 'node:child_process';
+const previous='bc1626a1c007f436296a3bcd55be9f72a8da6f10';
+const before=p=>execFileSync('git',['show',`${previous}:${p}`],{encoding:'utf8'});
+const now=p=>readFileSync(new URL(`../${p}`,import.meta.url),'utf8');
+assert.equal(now('src/expand.mjs'),before('src/expand.mjs'));
+assert.equal(now('src/compile.mjs'),before('src/compile.mjs').replaceAll('contracts@0.4.0','contracts@0.4.2'));
+assert.equal(now('src/index.mjs'),before('src/index.mjs').replaceAll('0.3.0','0.3.1').replaceAll('contracts@0.4.0','contracts@0.4.2'));
+assert.equal(now('types/index.d.mts'),before('types/index.d.mts').replaceAll('0.3.0','0.3.1'));
+console.log(JSON.stringify({evidence:'SOURCE',baseline:previous,compilerAlgorithmUnchanged:true,expanderByteIdentical:true,serviceOnlyMetadata:true,typesOnlyVersionLiteral:true,worldWrites:0,modelCalls:0}));

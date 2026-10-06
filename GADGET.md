@@ -1,4 +1,4 @@
-# Brush 0.3.0 current public boundary
+# Brush 0.3.1 current public boundary
 
 Evidence: SOURCE/FIXTURE. This package has no external runtime of its own.
 Actual pack installation and execution do not prove App/world/model/Undo or
@@ -12,9 +12,9 @@ with no injected services. The service exposes compile/compileBytes/handshake/st
 Low-level expandEffects requires already validated geometry/materials; public
 compile is the admitted boundary.
 
-The bundled contracts are the unmodified 20-file npm artifact 0.4.0 from source
-`8cfb18f8e13aa33d7a942f230ec6117914322cdd`, SHA256
-`d7b22e76de5e161abe7525596df608b3f00445fb4237808941cb5ef8328e9bc4`.
+The bundled contracts are the unmodified 21-file npm artifact 0.4.2 from source
+`aad7c0ea2a4a9a93dfb13555c46cd98b9b5da777`, SHA256
+`c3528a4fc3f0cdf94245c4d2d8b1cfa5d28db96d1cd00ae74737bdbdfcd26ec6`.
 The imports map uses its root API. `verify:contracts` checks repack hash, inventory
 and file bytes. Only runtime dependency is canonicalize 5.1.0. There are no peer
 plugin imports, old wire adapters, authority/grant fields or world ports.
@@ -49,3 +49,9 @@ Fresh installation uses one current peer/contracts set and exact handshake.
 No compatibility or profile migration. The original implementation and complex
 matrices remain in Git/test/legacy, indexed through DEFERRED; this card only runs
 normal compilation and core invariants. No release or deployment is claimed.
+
+Image pin delta: MaterialSources adds no Brush input or operation fields. The
+compiler and expander behavior remain from bc1626a; only exact bundled contract
+identity/handshake and current public declarations change. Use test:image and
+gate-image-contracts.sh for the affected install/type/compile smoke; the original
+nine core checks and complex legacy matrix are retained without rerunning here.

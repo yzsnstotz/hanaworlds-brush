@@ -1,10 +1,10 @@
 {
   "name": "hanaworlds-brush",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "private": true,
   "type": "module",
   "license": "MIT",
-  "description": "Pure deterministic BUILD/V3 to operations/v3 compiler; contracts 0.4.0, no world mutation",
+  "description": "Pure deterministic BUILD/V3 to operations/v3 compiler; contracts 0.4.2, no world mutation",
   "repository": {
     "type": "git",
     "url": "https://github.com/yzsnstotz/hanaworlds-brush.git"
@@ -48,7 +48,9 @@
     "pack:artifact": "npm pack --ignore-scripts --pack-destination artifacts --json",
     "vendor:contracts": "node tools/vendor-contracts.mjs",
     "typecheck": "tsc --noEmit --strict --module nodenext --moduleResolution nodenext --target es2022 test/consumer.mts",
-    "gate": "bash tools/gate-local-build.sh"
+    "gate": "bash tools/gate-local-build.sh",
+    "test:image": "node --test test/image-contracts.test.mjs",
+    "gate:image": "bash tools/gate-image-contracts.sh"
   },
   "dependencies": {
     "canonicalize": "5.1.0"

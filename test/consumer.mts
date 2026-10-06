@@ -1,4 +1,4 @@
-import plugin, {BrushV3,compileBuildDocument,compileBuildDocumentBytes,expandEffects, type BuildDocumentRequest, type BuildDocumentResponse} from 'hanaworlds-brush';
+import plugin, {BrushV3,compileBuildDocument,compileBuildDocumentBytes,expandEffects, version, type BuildDocumentRequest, type BuildDocumentResponse} from 'hanaworlds-brush';
 function consume(q:BuildDocumentRequest) {
  const out:BuildDocumentResponse=compileBuildDocument(q);
  const raw:BuildDocumentResponse=compileBuildDocumentBytes(new Uint8Array());
@@ -12,3 +12,6 @@ function consume(q:BuildDocumentRequest) {
  return {out,raw,input,output};
 }
 void consume;
+
+const packageVersion: "0.3.1" = version;
+void packageVersion;

@@ -5,11 +5,11 @@ export { compileBuildDocument, compileBuildDocumentBytes, hostCapabilities };
 export { expandEffects } from './expand.mjs';
 export { contractHandshake };
 export const name = 'hanaworlds-brush';
-export const version = '0.3.0';
+export const version = '0.3.1';
 export const serviceName = 'hanaworldsBrushV3';
 export const invariants = Object.freeze([
  'PURE_COMPILER: no world connection, read/write, persistence, model access, clock or randomness',
- 'STRICT_ADMISSION: contracts@0.4.0 strict raw UTF-8/duplicate-key/pure JSON and complete BUILD/V3 schema',
+ 'STRICT_ADMISSION: contracts@0.4.2 strict raw UTF-8/duplicate-key/pure JSON and complete BUILD/V3 schema',
  'DIGEST_BINDING: build, catalogue, frame, target facts, safety and compilation config bind their exact payloads',
  'IDENTITY_BINDING: request localContext names its world; observed facts name that world; PLANNED facts name a preceding build',
  'EXACT_GEOMETRY: exact union bounds, last writer wins, one effect per cell, numeric x/y/z order, no rounding or cropping',
