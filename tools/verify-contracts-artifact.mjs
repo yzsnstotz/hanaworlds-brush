@@ -18,7 +18,7 @@ const pkg = JSON.parse(readFileSync(join(pkgDir, 'package.json'), 'utf8'));
 const out = mkdtempSync(join(process.env.BRUSH_VERIFY_TMP ?? tmpdir(), 'brush-contracts-pack-'));
 try {
   const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
-  const [packed] = JSON.parse(execFileSync(npm, ['pack', pkgDir, '--ignore-scripts', '--pack-destination', out, '--json'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'inherit'] }));
+  const [packed] = JSON.parse(execFileSync(npm, ['pack', pkgDir, '--ignore-scripts', '--pack-destination', out, '--json'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'inherit'], env: { ...process.env, NPM_CONFIG_CACHE: join(out, 'npm-cache'), npm_config_cache: join(out, 'npm-cache') } }));
   const sha256 = createHash('sha256').update(readFileSync(join(out, packed.filename))).digest('hex');
   const extract = join(out, 'x');
   mkdirSync(extract);

@@ -1,22 +1,21 @@
-// Pure BUILD/V2 -> operations/v2 compiler. No world connection, no mutation,
+// Pure BUILD/V3 -> operations/v3 compiler. No world connection, no mutation,
 // no persistence, no model access, no clock, no randomness.
 //
 // Every public type, digest and coherence rule comes from the admitted
-// hanaworlds-contracts@0.3.0 package (v4 lane, which admits target-facts/v3
+// hanaworlds-contracts@0.4.0 package (current lane, which admits target-facts/v4
 // REGION_INSPECTED facts); this module only orders those checks
-// along the frozen BuildDocument validationOrder and performs the expansion.
+// through current public validators and performs the unchanged expansion.
 
+import { types as nodeTypes } from 'node:util';
 import {
   ContractError, validateBoundRequest, digestValue, validateFactsCoverage,
   validateStaticMaterials, validateWitnessCoherence, unionCellCount, comparePosition,
-  operationContracts,
+  validateResponse, admitRequest,
 } from '#contracts';
-import * as buildV2 from '#contracts/BUILD/V2';
 import { expandEffects, unionBounds } from './expand.mjs';
 
-const WIRE = 'BUILD/V2';
+const WIRE = 'BUILD/V3';
 const OPERATION = 'BuildDocument';
-const failureCodes = new Set(operationContracts[WIRE].find(op => op.operation === OPERATION).failureCodes);
 
 /**
  * Attributed host capability: the largest array the ECMAScript engine can
@@ -36,10 +35,10 @@ const key = p => `${p[0]},${p[1]},${p[2]}`;
 
 /**
  * Internal (not a package export): bind target facts to the request by source.
- * INSPECTED and REGION_INSPECTED (target-facts/v3, a first building's inspected
+ * INSPECTED and REGION_INSPECTED (target-facts/v4, a first building's inspected
  * region) are both observed world facts bound to the request world. Only
  * PLANNED facts describe a preceding plan; REGION_INSPECTED is never PLANNED.
- * contracts@0.3.0 validateBoundRequest enforces the same world binding first;
+ * contracts@0.4.0 validateBoundRequest enforces the same world binding first;
  * this is Brush's own binding and is unit-tested directly.
  */
 export function bindFactsSource(facts, request) {
@@ -97,7 +96,7 @@ function stage(request) {
   validateWitnessCoherence({ build, finalEffects, targetFacts: facts, safetyProfile: request.safetyProfile, catalogue, witnesses: build.witnesses });
 
   const operations = digestValue('operations', {
-    contractVersion: 'operations/v2',
+    contractVersion: 'operations/v3',
     buildDigest: request.buildDigest,
     compilerRevision: request.compilerRevision,
     compilationConfigDigest: request.compilationConfigDigest,
@@ -111,7 +110,10 @@ function stage(request) {
 }
 
 function requestIdOf(value) {
-  const id = value !== null && typeof value === 'object' && !Array.isArray(value) && Object.hasOwn(value, 'requestId') ? value.requestId : null;
+  // A rejected pure-JSON input must never invoke caller code while recovering an ID.
+  if (value === null || typeof value !== 'object' || nodeTypes.isProxy(value) || Array.isArray(value)) return null;
+  const descriptor = Object.getOwnPropertyDescriptor(value, 'requestId');
+  const id = descriptor && Object.hasOwn(descriptor, 'value') ? descriptor.value : null;
   return typeof id === 'string' && id.length > 0 ? id : null;
 }
 
@@ -120,7 +122,7 @@ function isHostCapacityError(error) {
 }
 
 function respond(requestId, result, error) {
-  return buildV2.response(OPERATION, { contractVersion: WIRE, requestId, result, error });
+  return validateResponse(WIRE, OPERATION, { contractVersion: WIRE, requestId, result, error });
 }
 
 /**
@@ -128,8 +130,7 @@ function respond(requestId, result, error) {
  *
  * Returns a validated BuildDocumentResponse with exactly one of result/error.
  * A typed failure carries zero output. When the failure cannot be expressed in
- * a valid response (no recoverable requestId, or a contract error code outside
- * the BuildDocument allowlist) the ContractError itself is thrown; nothing is
+ * a valid response (no recoverable requestId) the ContractError itself is thrown; nothing is
  * produced in either case. Non-contract exceptions are programming defects
  * and propagate unchanged.
  */
@@ -143,7 +144,7 @@ export function compileBuildDocument(value) {
     if (isHostCapacityError(error)) contractError = new ContractError('LIMIT_EXCEEDED', 'validate', 'LIMIT_EXCEEDED');
     if (!(contractError instanceof ContractError)) throw error;
     const requestId = request?.requestId ?? requestIdOf(value);
-    if (requestId === null || !failureCodes.has(contractError.code)) throw contractError;
+    if (requestId === null) throw contractError;
     return respond(requestId, null, contractError.publicError);
   }
 }
@@ -151,5 +152,5 @@ export function compileBuildDocument(value) {
 /** Compile from raw UTF-8 request bytes using the contracts strict decoder. */
 export function compileBuildDocumentBytes(bytes) {
   // Raw strict decode (UTF-8, duplicate decoded keys, pure JSON) precedes everything else.
-  return compileBuildDocument(buildV2.admit(OPERATION, bytes));
+  return compileBuildDocument(admitRequest(WIRE, OPERATION, bytes));
 }

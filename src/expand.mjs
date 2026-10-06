@@ -1,6 +1,6 @@
 // Exact expansion of ordered inclusive set_box operations into final effects.
 //
-// Semantics are the frozen BUILD/V2 + compilation-config/v2 rules:
+// Semantics are the frozen BUILD/V3 + compilation-config/v2 rules:
 // last-writer-wins on overlap, one effect per written cell, numeric x,y,z order,
 // no compression, no rounding, no truncation. The sweep below works on
 // coordinate slabs so that empty space between distant boxes is never visited,

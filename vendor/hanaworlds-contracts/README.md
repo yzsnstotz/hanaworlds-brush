@@ -1,100 +1,48 @@
-# hanaworlds-contracts 0.3.0 source candidate
+# HanaWorlds Contracts 0.4.0
 
-Independent **non-runtime** contracts package containing the prior v2 surface, the admitted `canvas/v3` and `world-adapter/v3` surface, and the approved Stage 1 `3.0.0-rc.8` v4 lane (`interaction-surface/v3`, `world-adapter/v4`, `canvas/v4`, `painter/v3`, `target-facts/v3`). This repository does not register a gadget, establish a grant, instantiate a Session/store/transport, connect to an engine or write to a world. Provider gates remain `NOT_RUN`.
+Pure public contracts for the single-user local-world MVP. Import from `hanaworlds-contracts`. This is a fresh-install protocol replacement. No prior exports, peer compatibility, state migration, or permission bridge ships in this package. Earlier source and evidence remain in Git and their original run directories.
 
-The approved Stage 1 `2.0.0-rc.5` bundle adds `NON_CANONICAL_AMBIGUITY` to exactly four `world-adapter/v3` operation response lists and eight response/authorization precedence oracles. It retains the rc.4 correction to three history response lists and thirteen response oracles. The candidate source preserves the seven v2 wires, `operations/v2`, the contracts@0.1.0 digest domain and 19 production digest goldens. The `history-operation` projection retains its contracts@0.2.0 domain. Its public origin is [yzsnstotz/hanaworlds-contracts](https://github.com/yzsnstotz/hanaworlds-contracts). This branch is not an admitted release, registry publication or product acceptance.
+`spec/local-world/profile.json` is the authored schema and operation source. `src/local/` owns pure relation/geometry validation. `npm run build` generates `dist/local`, `types/local`, `schemas/local`, and current fixtures. Never edit those outputs directly.
 
-HanaWorlds original code is MIT-licensed; the separate Apache-2.0 upstream source fixture retains its own license. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
+Current wires: `session/v3`, `canvas/v5`, `world-adapter/v6`, `painter/v4`, `BUILD/V3`, `ReferenceBrief/v3`, `interaction-surface/v4`; compiled operations `operations/v3`; target facts `target-facts/v4`; safety profile `safety-profile/v3`. Every digest uses the new `HanaWorlds|contracts@0.4.0|` domain. Exact package handshake is mandatory. Old digests are not reused.
 
-## Public surface
+## Local association and dispatch
 
-The root export contains strict admission, typed validation, immutable protocol inventories, explicit production projections and digest functions. The eight versioned subpaths are `interaction-surface/v2`, `world-adapter/v2`, `canvas/v2`, `session/v2`, `painter/v2`, `ReferenceBrief/v2`, `BUILD/V2`, and `operations/v2`. Case is significant. The first seven expose `validate`, `admit` and `response`. Canvas also exposes `event`; operations exposes `validate`, `admit`, `digest` and `validateCompiledSet`. Painter preserves the explicit alternate `ClarificationNeed` result rather than inventing a Build.
+`LocalWorldContext` contains the actual `connectionRef`, transport-open `connectionIncarnationRef`, selected `worldRef`, and Canvas world-selection `selectionRevision`. Adapter creates a new incarnation for each opened connection. Canvas changes the selection revision on connection/world reselection. These values correlate transport and business state; they convey no privileges, identity claims, permission, or delegated right. Read the actual connection through `ReadLocalConnection`; select using `SelectWorldConnection` with `expectedContext` (null for initial selection). `validateWorldSelection` compares the requested world/connection/incarnation to that readback. `ReadWorldSelectionContext` remains callable before a world is selected. Never invent a default incarnation.
 
-All 243 named types are emitted as TypeScript declarations and self-contained Draft-07 schemas. `schema-inventory` inventories the 244 schema documents, eight bindings, 38 operations, 14 Canvas event types, and 19 digest projections. JavaScript ES modules and TypeScript declarations are the minimum closed language bindings; no Lua provider is included. JSON Schema establishes structure; the public validators also enforce local normative domain invariants. Cross-provider authenticity, durable storage and engine safety cannot be inferred from structurally valid fields.
+World-bound requests carry `localContext`. Providers run strict `admitRequest` / `validateBoundRequest` and `validateCurrentRequest` using their own current state. The latter returns `EXECUTE` or `RETURN_STORED`; a completed duplicate returns the recorded outcome and cannot cause a second write. Provider storage owns durable reservation and outcome persistence. `LocalRequestFacts` is an internal function argument read from provider state, never a client credential or model tool payload. Current turn/brief and current connection must be re-read before consuming a result. No serialized value establishes live truth.
 
-### v3 migration surface
+The Host binds internal ports: model → Workshop proposal tool → Painter → pure Brush → Canvas. Adapter mutators are exposed only on the internal Canvas dispatch port. Contracts describe this ownership and check payloads; they do not authenticate transports or enforce process access. A `callerRole: "Canvas"` field is not a substitute for internal dispatch and is not accepted. Painter and Brush never write the world; the model cannot invoke Adapter mutators.
 
-`hanaworlds-contracts/v3` exposes the candidate v3 runtime and `history-operation` digest. `hanaworlds-contracts/world-adapter/v3` and `hanaworlds-contracts/canvas/v3` are the two changed wire bindings. `hanaworlds-contracts/v3/schemas`, `/v3/schema/*`, `/v3/schema-inventory`, `/v3/fixtures/*` and `/v3/fixture` expose the corresponding 258 named types, 259 schemas, 44 operations, 20 projections and pure oracles. The unchanged v2 paths remain explicit; a v3 mutation port rejects a v2 envelope. Existing v2 projections inside a v3 request keep their version and exact digest bytes.
+## Build and transaction flow
 
-Canvas v3 `ApplyRecoverableCommit` removes caller `preparedTransaction`. Canvas owns a durable reservation before trusted Adapter Prepare. A direct v2 caller of `CreateObject` cannot use its selected `objectRef` as registration authority in v3; Canvas must pin and match the generated ref against its verified creating transaction. Adapter v3 adds prepare/query/apply/abort history transaction operations for the current verified HanaWorlds author and linked objects. These are contract shapes and synthetic fixture models; the owning providers must implement the authority, durability, recovery and world effects.
+1. Workshop supplies the current confirmed brief, bounded proposal context and live local facts. Painter calls `validateBuildProposalContext`, performs its BUILD construction, then `validateBuildProposalResponse`. Protected-region and game-privilege checks are absent. Physical body clearance, coverage, materials, hazards and geometry remain. Placement uses `CURRENT_VIEW` or a `PICKED_POINT`; online-user authorization and named-player choice are absent.
+2. Brush consumes `BUILD/V3`, validates exact effects, and returns `operations/v3`. The declared BUILD, frame, catalogue, facts, safety and compilation digests must match. Contracts do not run a compiler.
+3. Workshop uses `CurrentBuildSubmission` / `validateCurrentBuildSubmission` to correlate the current advance, intent, Canvas affected-object analysis and apply request. This replaces the former authorization derivation. Existing-object conflicts reject this fresh-build entry. Canvas owns further decision, registry, inspection-record and revision checks.
+4. Canvas reserves a single transaction, reads real occupied footprints, and passes `ScopedWorldBinding` to Adapter prepare/apply. The scoped payload binds the exact local context, operation, checked cells, existing object footprints and saved before image. `projectScopedPreparedTransaction` projects the prepared result for apply. Caller-supplied prepared state is forbidden at the Canvas apply port.
+5. Canvas obtains actual complete readback. `validateCommitReadback(receipt, expectedReadback, actualReadback, durableHistory)` checks equality, digest and same-transaction durable history. The expected state must come from Canvas/Adapter compilation or the saved before image, actual state from Adapter, and history from Canvas's durable store. For rollback, compare the complete saved before-state readback and pass null history. Pending/unknown is not verified success. These pure checks never prove real reads or durable persistence themselves.
+6. History Undo retains the original transaction, saved before image, before/after readback digests, current state and history revisions. Workshop `UndoCurrentBuild` resolves the current verified build; Canvas owns same-transaction Undo, conflict checks and durable linked history. Adapter only transports it. Existing recovery shapes remain available for future work, but RPC recovery, timeout reentry, concurrency and extensive counterexample matrices are deferred and are not tested by this MVP gate.
 
-```js
-import { admitRequest, digestValue } from 'hanaworlds-contracts/v3';
-import * as Adapter from 'hanaworlds-contracts/world-adapter/v3';
-import * as Canvas from 'hanaworlds-contracts/canvas/v3';
+## Consumer replacement map
 
-const admitted = admitRequest('canvas/v3', 'ApplyRecoverableCommit', rawBytes);
-const historyDigest = digestValue('history-operation', exactHistoryProjection).sha256;
-```
+All five origins pin this exact 0.4.0 tarball and import the root API. No consumer source is changed here.
 
-The approved rc.3 erratum makes `WA-09-VALID` and `CA-09-VALID` exact v3/v3 handshakes, adds v3/v2 mixed negative cases with zero writes, and sets only the outer `ObjectNameChanged` and `HistoryPositionChanged` event versions to `canvas/v3`. The four internal v2 digest projections and their nineteen goldens remain unchanged. `npm run test:v3` checks all approved valid, invalid and ambiguity cases without exemptions. Independent specification review and admission remain separate from the test result; see [SPEC_CONFLICTS.md](https://github.com/yzsnstotz/hanaworlds-contracts/blob/codex/s1-02-contracts-v4/SPEC_CONFLICTS.md) in the source repository for the correction record.
+| Origin | Required change |
+|---|---|
+| Workshop | session/v2 → session/v3; ReferenceBrief/v2 → v3; remove authorization providers and old CurrentBuildAuthorization helpers. Use `LocalRequestFacts`, `BuildProposalProviderFacts` (source/current context + requestFacts), `CurrentBuildSubmission` and current request admission. Send `localContext` through proposal, compile, analyze/apply and Undo. Respect RETURN_STORED. |
+| Painter | painter/v3 → v4; retain public ValidateBuildProposal operation/helper names. Remove authorizationRef/actorRef and grant/binding/INSPECT facts. Consume new safety/fact/digest versions. Remove PROTECTION witnesses and requireProtectedClearance; keep BODY_CLEARANCE/COVERAGE/HAZARD. |
+| Canvas | canvas/v4 → v5; current world selection carries LocalWorldContext. Replace authority checks with actual current connection/selection and business correlation. Keep durable inspection records, object conflicts, single transaction, readback, rollback and history. Receipts and scoped transaction payloads carry localContext. Use world-adapter/v6 for internal transport. |
+| Adapter | world-adapter/v4/v5 → v6. Replace AuthorizeBinding with ReadLocalConnection; return current transport incarnation, world, payload/capabilities. Remove authorization and protectedPositions machinery. Use scoped prepare/apply, exact before-state and actual readback. Keep mutators internal to Canvas. |
+| Desktop | Remove permission UI, first-world/range grants and grant lifecycle. Discover/read actual local connection, select with expectedContext, propagate returned localContext. Use exact new handshake; handle unbound state. Rewire session/v3, canvas/v5, interaction-surface/v4 and existing Undo controls. |
 
-The rc.4 response patch permits six additional Prepare errors, one QueryPrepared error, and three Apply errors for approved zero-write history outcomes. It leaves Abort and unrelated operations unchanged. Thirteen approved positive and negative response cases exercise the operation-level allowlists; they do not establish provider behavior.
+The Brush interface is also part of this package: `BUILD/V3` / `operations/v3`; it remains pure. Whichever origin loads Brush must supply this same new package. No mixed old/new peers or profile is supported.
 
-The rc.5 patch permits `NON_CANONICAL_AMBIGUITY` responses from `PrepareRecoverableTransaction`, `ApplyCompiledTransaction`, `PrepareHistoryTransaction` and `ApplyHistoryTransaction` after valid authorization and a mismatched digest. Eight approved response/precedence cases distinguish that outcome from revoked authorization. Query, Abort and unrelated operations remain excluded. This source package validates response shape and allowed codes; it does not verify a provider's authorization ordering.
+## Evidence
 
-### v4 lane (contracts@0.3.0, approved Stage 1 `3.0.0-rc.8` with errata `3.0.0-rc.9` and `3.0.0-rc.10`)
+`npm test` exercises the normal public chain and its core boundaries only. `npm run typecheck` checks an independent typed consumer surface. `tools/gate-local-world.sh <full-source-sha> <evidence-directory>` archives the exact source, installs from the lock, builds, verifies deterministic outputs, runs the source gate, packs the real tarball and installs it in a separate consumer. All results are SOURCE/FIXTURE, with no real model, world, UI or product acceptance claim.
 
-`hanaworlds-contracts/v4` is the runtime for the seven current wires `interaction-surface/v3`, `world-adapter/v4`, `canvas/v4`, `session/v2`, `painter/v3`, `ReferenceBrief/v2` and `BUILD/V2`, plus `operations/v2`. The four changed majors have their own subpaths (`hanaworlds-contracts/interaction-surface/v3`, `/world-adapter/v4`, `/canvas/v4`, `/painter/v3`); the unchanged wires are bound to the v4 runtime under `/v4/session/v2`, `/v4/ReferenceBrief/v2`, `/v4/BUILD/V2` and `/v4/operations/v2`, so a `BUILD/V2` consumer on this lane admits `target-facts/v3` facts. `/v4/schemas`, `/v4/schema/*`, `/v4/schema-inventory`, `/v4/fixtures/*` and `/v4/fixture` expose 283 named types, 284 schemas, 46 operations, 20 projections and the pure oracles. `/v4/profile/*` ships the byte-pinned approved profile, semantic closure and settings registry. The v2 and v3 lanes and their schema identities are unchanged.
+Shell management consumers also render `placementSettingDescriptors`, `placementInvariants`, and `settingsSurface`. The four existing placement defaults remain 2/16/8/4; removing permissions does not hide geometry settings or correctness invariants. The current schema/profile export is the complete per-operation field inventory.
 
-What the approved slice adds, as contract shapes and admission only:
+The existing Adapter lifecycle `acquire` port now has the shared `LocalWorldAcquireInput` shape `{connectionRef, requesterRef, userPath, action}`; neither username nor password is accepted. `LocalWorldQuery` and `LocalWorldObservation` describe its inspect handle and actual current process/world result. `worldRef` may be null before payload provisioning. `LocalWorldLifecycleAction` selects provisioning or connection work, not a permission. `leaseRef` is a finite process-operation handle, not a grant or an Adapter mutation credential.
 
-- `world-adapter/v4`: `PrepareRecoverableTransaction`/`QueryPreparedTransaction` return `PreparedTransactionResult` (the seven `PreparedTransaction` fields plus `beforeStateReadbackDigest`); `projectPreparedTransaction` gives the seven fields Apply carries. Read-only `InspectRegion` returns `PlacementOutcome` (`REGION_INSPECTED` with a full `RegionInspection`, or `PLACEMENT_CHOICE_REQUIRED`). `validateRegionInspection` recomputes the facts, frame and coverage digests from the carried values. Prepare admits the body-recheck `SAFETY_INVARIANT_FAILED`.
-- `canvas/v4`: `ListObjects` with `expectedRevision: null` is the read-only current-inventory query; `InspectPlacementRegion` relays the Adapter outcome with `unavailableSettings`; `ApplyRecoverableCommit` carries `regionInspectionBinding` (required, nullable). `validateBoundRequest` checks only the payload-carried part of that binding (build, frame and facts digests); the Canvas record match, the issued `inspectionId` and the stale-record check need the Canvas record and are not decided here.
-- `painter/v3`: `regionInspection` is non-null exactly for `REGION_INSPECTED` facts, which only `picture-blocks` accepts; mismatched facts are `TARGET_FACTS_STALE`.
-- rc.9: `PlacementChoiceRequired` offers `NAME_PLAYER` only for `MULTIPLE_ONLINE_PLAYERS` and `PICK_WORLD_POINT` alone for every other reason. Workshop presents `SELECT_CHOICE` in Shell; the Luanti in-world renderer answers an in-world `SELECT_CHOICE` with `RENDERER_CAPABILITY_UNAVAILABLE` (renderer behavior; the package admits that typed response).
-- `interaction-surface/v3`: `PICK_WORLD_POINT`, typed `ActionDescriptor.choices` and `SELECT_CHOICE`; `validateChoiceSelection(frame, request)` returns `INVALID_SELECTION` for any `SELECT_CHOICE` value not listed for that frame and action, including `SELECT_CHOICE` sent to an action without choices; other input kinds are not checked against the list.
-- `target-facts/v3` (`REGION_INSPECTED`) and `ContractHandshake`: `contractHandshake` is exactly what this package advertises, and `checkContractHandshake(advertised, required)` fails a mixed 0.2.1/0.3.0 pair with `UNSUPPORTED_VERSION/decode/VERSION_UNSUPPORTED` before any request.
-- `placement.*` settings: `placementSettingDescriptors` and `placementInvariants` carry the registry (owner, user-decided defaults 2/16/8/4, consequences) for the Shell management projection; `admitPlacementSettings` never applies a default and names every unset or invalid setting in `error.unavailableSettings`.
-
-**Use `validateBoundRequest` for v4 bound checks.** The subpath bindings' `validate` and `admit` (for example `hanaworlds-contracts/canvas/v4`) check shape and local domain rules only; they do not run the v4 bound checks (the Apply region binding, painter/v3 region coherence, BUILD/V2 frame and world coherence). Consumers must call `validateBoundRequest` from `hanaworlds-contracts/v4` (after raw admission) to get them.
-
-No digest kind, projection or golden changes. No Adapter region search, Canvas record or Session logic is implemented here; those remain provider work and `NOT_RUN`.
-
-`npm test` runs the legacy 558 cases, the v3 lane, `test/v4.mjs`, the four approved checkers (rc.10 bytes) unchanged against this package's exported profile/closure/fixtures (`test/v4-approved-checks.mjs`, including the 27-mutation falsifiability harness), and `test/v4-chains.mjs`, which admits every chain message through the package API and writes the per-closure-row table to `evidence/closure-coverage-v4.json`. Known differences between approved fixtures and package behavior are recorded in [SPEC_CONFLICTS.md](https://github.com/yzsnstotz/hanaworlds-contracts/blob/codex/s1-02-contracts-v4/SPEC_CONFLICTS.md) in the source repository.
-
-```js
-import { admitRequest, digestValue, runtimeCompatibility } from 'hanaworlds-contracts';
-import * as Canvas from 'hanaworlds-contracts/canvas/v2';
-
-// bytes are Uint8Array received at the caller's own boundary.
-const request = admitRequest('canvas/v2', 'SetObjectSelection', bytes);
-// Canonical digests accept exact declared projection objects, never arbitrary JSON.
-const receiptDigest = digestValue('receipt', typedReceiptProjection).sha256;
-const compatibility = runtimeCompatibility();
-```
-
-## Admission and projection boundaries
-
-`decodeRawJSON` validates strict UTF-8, JSON grammar, duplicate **decoded** keys and Unicode scalars. It rejects overflow/non-finite numbers and never applies a reviver or full-document `JSON.parse`. The explicit stack does not impose an invented nesting limit. `snapshotJSON` uses descriptors, rejects proxies, getters, functions, symbols, custom prototypes, cycles, boxed values, sparse arrays and extra array properties, and never calls `toJSON`. It detaches inputs into plain JSON before validation. Public error values contain only the seven frozen fields, not exception text or private payloads.
-
-`admitType`, `admitRequest` and `digestRaw` are raw-byte admission entry points. `validateType`/`validateRequest` accept already-decoded pure JSON but cannot recover whether an upstream decoder discarded duplicate keys; network callers must use raw admission before any provider query. `validateBoundRequest` checks carried digest and identity coherence without authenticating the caller. `validateWitnessCoherence` checks supplied facts but never returns an authorization grant. Pure validations return immutable detached values and do not sort, deduplicate, normalize refs, round coordinates or inject defaults.
-
-Each digest uses the exact type declared in `digestProfile.projectionTypes` and invokes the pinned `canonicalize@5.1.0` implementation directly. The prefix is `HanaWorlds|contracts@0.1.0|<kind>\n`. No recursive deletion is performed. `projectField(kind, sourceType, source, field)` admits a complete declared wrapper and extracts the typed field; loose undeclared wrapper fields are rejected. Nested state-record metadata/inventory/timers and nested digest fields are retained.
-
-Naming is separate: forbidden characters are rejected before trim; display text retains its trimmed original form and comparison keys use NFC then ASCII-only case conversion. `normalizeName` refuses to create persistent keys unless the actual Node/ICU runtime declares Unicode **17.0** and passes the compatibility checks. Ordinary refs never use this function. The source reference runtime was Node 24.13.1; each new runner must record its own actual version and compatibility result.
-
-## Build and validation
-
-On a compatible, isolated environment with public registry access:
-
-```sh
-npm ci --ignore-scripts
-npm run build
-npm run typecheck
-npm run compat
-npm run test:strict
-npm test
-npm run test:v3
-npm run test:v4
-npm run verify:source
-npm run pack:artifact
-```
-
-`package-lock.json` pins canonicalize 5.1.0 and TypeScript 5.8.3 to their public npm registry integrities. Historical return evidence is not part of this source repository and does not prove the current branch's build or installation.
-
-An explicit diagnostic command, `npm run test:source-fixture`, maps the bare canonicalize import to the unchanged approved upstream source snapshot through a **test-only loader**. It permits source/fixture checks when npm is unavailable. It is not a production fallback, an installed registry dependency, or package REAL_RUNTIME installation evidence. The loader is outside the npm artifact. Standard `npm test` does not silently use it.
-
-`hanaworlds-contracts/fixture` exports pure, clearly named fixture evaluators for authorization ordering, replay, recovery, history, retention, deletion and event eligibility. Inputs are synthetic explicit facts; no expected outcomes or fixture IDs are passed to semantic evaluators. Reported oracle `worldWrites` values are modelled counters, not actual effects. The actual number of world writes/provider queries is zero. Query success alone never implies a changed event. Source snapshots under `spec/` are evidence only, not runtime engine dependencies.
-
-To roll back this source candidate, consumers stay on (or return to) the admitted `0.2.1` source `5ecfce1ba47530b42bba60a674bd16f7bc39c665` and its matched artifact; the whole contracts@0.3.0 consumer set moves back together, because the handshake rejects any mixed 0.2.1/0.3.0 pair. Do not overwrite a published package version. Provider conformance, product composition, release, deployment and user acceptance remain separate gates.
+The existing Host control service is described by `NativeControlInput` `{requesterRef,worldPath,userPath,operationRef}`, `NativeControlLease` `{controlRef,worldPath}`, `NativeControlQuery` `{controlRef,requesterRef,worldPath,operationRef}` and `NativeControlEvidence` `{state,worldPath,processId,operationRef}`. `LocalEngineControlPort` declares its acquire/inspect/withStoppedWorld methods. These match the observed Desktop no-credential source shape; no username, password or engineActorName is supplied or read. Paths must be canonicalized by the owning runtime, and CURRENT/STOPPED facts must come from its actual child lifecycle, with STOPPED valid only inside its callback. Adapter must remove facts.username equality and engineActorName from observations, and correlate the actual process/world/operation instead. No new wire, tool or lifecycle implementation is introduced here. After pairing, actual transport incarnation is read through ReadLocalConnection.
