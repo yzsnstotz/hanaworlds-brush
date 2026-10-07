@@ -1,15 +1,31 @@
 # Brush 编译预览（开发面板）
 
-本包属于 hanaworlds-brush，同仓独立安装，不替换安装器锁住的 Brush 编译包。
+本包属于 hanaworlds-brush。当前开发入口是同仓独立网页，原 App 面板代码保留，App 内接入归整合卡。
+
+## 本机独立网页
+
+在本仓使用 Node 24（>=24.13.1、<25）执行：
+
+```sh
+npm ci --omit=dev --ignore-scripts
+ln -s .. node_modules/hanaworlds-brush
+npm --prefix preview/web ci --ignore-scripts
+npm --prefix preview/web start
+```
+
+打开 http://127.0.0.1:47602/。服务仅监听本机回环地址；端口占用直接报错，不换端口。
+现有 `client.cjs` React 面板原样复用，编译请求经同源 HTTP 到 Node Host，直接调用原 `compilePreview` 与 Brush 0.5.0。
+React 资源在本机服务，无 CDN、模型或世界写入；不依赖 HanaWorlds.app、App 安装或 GUI 锁。
+样例与输出不等于真实世界；服务会保持运行供试用，Ctrl+C 可正常退出。
 
 - 输入：小房子、区域填充、挖坑、非法材质四个 fixture 样例，宽/高/深和 fixture 石头/泥土。
 - Host 调用已交付 Brush 0.5.0 `compileRegionBuild`。编译语义、contracts、世界和事务都不改。
 - 输出：可切 Y 层的俯视方块、材质计数、地图块计数与子结果标识、完整结果标识。
 - 材料目录、世界和会话来自 Brush 内置的公开 contracts 0.5.0 region fixture。面板上明示 FIXTURE；无世界写入。
-- 通过 DSH 公开 `@Remote` source-mode 开发端点和 `ctx.connection.rpc.call` 调用 Host；Gateway 校验 JSON，Brush 校验输入。
+- 独立网页通过同源 `/api/compile` 调用 Node Host；原 App 接入通过 DSH 公开 `@Remote` 和 `ctx.connection.rpc.call` 调用 Host。两者复用同一编译准备/汇总代码，由 Brush 校验编译输入。
 - 同一输入再编译，显示与前次标识是否相同。编辑输入即清掉旧预览，进行中的旧输入结果不会覆盖新输入。
 
-## 本机 App 安装
+## 原 App 接入（历史，归整合卡）
 
 先确认 Desktop 已安装 `/Applications/HanaWorlds.app`，且 PM 已释放本机 GUI 锁并允许本面板安装。
 在 App「插件」页 → Add plugin，输入本包 tarball 的绝对路径，确认信任 → Install → Enable now。
@@ -37,4 +53,4 @@ npm --prefix preview pack --ignore-scripts --pack-destination /ABSOLUTE/EVIDENCE
 - hanaworlds-contracts：0.5.0 · MIT · Brush 内置公开包 · fixture 与区域编码/校验（不新增副本）。
 - DSH typert-protocol：0.2.0-rc.2 · MIT · official deepseek-ai/deepseek-harness / 已装 App · Host Remote（peer）。
 - Cordis：4.0.4 · MIT · official deepseek-ai/cordis / 已装 App · service（peer）。
-- React：18.3.1 · MIT · 已装 App baseline module · Client 界面（不捆绑）。
+- React / ReactDOM：18.3.1 · MIT · npm 官方 react / react-dom 包 · 独立网页本机资源（锁文件固定版本）；原 App 接入仍用其 baseline module。
