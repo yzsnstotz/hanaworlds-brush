@@ -1,0 +1,48 @@
+{
+  "name": "hanaworlds-brush-preview",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "description": "Brush 编译预览：fixture 输入 → Host 真实编译 → 分层方块与地图块摘要；不写世界",
+  "main": "./host.mjs",
+  "exports": {
+    ".": "./host.mjs",
+    "./client": "./client.cjs"
+  },
+  "files": [
+    "host.mjs",
+    "compile.mjs",
+    "client.cjs",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-connection",
+        "@deepseek-ai/dsh-client-ui-layout",
+        "@deepseek-ai/dsh-client-ui-sidebar"
+      ]
+    }
+  },
+  "peerDependencies": {
+    "hanaworlds-brush": "0.5.0",
+    "@deepseek-ai/dsh-typert-protocol": "0.2.0-rc.2",
+    "@deepseek-ai/cordis": "~4.0.4"
+  },
+  "peerDependenciesMeta": {
+    "hanaworlds-brush": {
+      "optional": true
+    }
+  },
+  "scripts": {
+    "test": "node --test test/compile.test.mjs",
+    "check": "node --check compile.mjs && node --check host.mjs && node --check client.cjs"
+  }
+}
