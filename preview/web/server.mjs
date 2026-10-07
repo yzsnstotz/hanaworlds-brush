@@ -10,6 +10,11 @@ const assets = new Map([
   ['/react.js', ['node_modules/react/umd/react.production.min.js', 'text/javascript; charset=utf-8']],
   ['/react-dom.js', ['node_modules/react-dom/umd/react-dom.production.min.js', 'text/javascript; charset=utf-8']]
 ]);
+// Read this deployment's static bytes before listening. A missing dependency
+// must fail startup, and removing a runtime file must not blank an active page.
+const resources = new Map(await Promise.all([...assets].map(async ([route, [file, type]]) =>
+  [route, {type, bytes: await readFile(new URL(file, import.meta.url))}]
+)));
 function json(res, status, value) {
   res.writeHead(status, {'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store'});
   res.end(JSON.stringify(value));
@@ -18,16 +23,10 @@ const server = createServer(async (req, res) => {
   if (req.headers.host !== `${host}:${port}` || (req.headers.origin && req.headers.origin !== origin)) {
     json(res, 403, {ok: false, error: {message: '请从本机 Brush 网页编译。'}}); return;
   }
-  if (req.method === 'GET' && assets.has(req.url)) {
-    const [file, type] = assets.get(req.url);
-    try {
-      const bytes = await readFile(new URL(file, import.meta.url));
-      res.writeHead(200, {'Content-Type': type, 'Cache-Control': 'no-store'});
-      res.end(bytes);
-    } catch (error) {
-      console.error('Brush 网页资源不可用', error);
-      json(res, 500, {ok: false, error: {message: '网页资源不可用，请检查服务安装。'}});
-    }
+  if (req.method === 'GET' && resources.has(req.url)) {
+    const {bytes, type} = resources.get(req.url);
+    res.writeHead(200, {'Content-Type': type, 'Cache-Control': 'no-store'});
+    res.end(bytes);
     return;
   }
   if (req.method !== 'POST' || req.url !== '/api/compile') {

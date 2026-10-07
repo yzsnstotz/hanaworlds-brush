@@ -16,6 +16,8 @@ npm --prefix preview/web start
 打开 http://127.0.0.1:47602/。服务仅监听本机回环地址；端口占用直接报错，不换端口。
 现有 `client.cjs` React 面板原样复用，编译请求经同源 HTTP 到 Node Host，直接调用原 `compilePreview` 与 Brush 0.5.0。
 React 资源在本机服务，无 CDN、模型或世界写入；不依赖 HanaWorlds.app、App 安装或 GUI 锁。
+服务在监听前读取本版本全部静态资源；缺依赖会直接启动失败，已启动页面使用该版本的内存资源。
+root/node_modules、preview/web/node_modules 和已有 contracts/dist 是运行及重启依赖，服务供试用或项目暂停时必须保留；不能当过期构建清掉。
 样例与输出不等于真实世界；服务会保持运行供试用，Ctrl+C 可正常退出。
 
 - 输入：小房子、区域填充、挖坑、非法材质四个 fixture 样例，宽/高/深和 fixture 石头/泥土。
