@@ -1,6 +1,6 @@
 // region-build/v1 CompileRegionBuild through the public entry only (source, or
 // the installed package via BRUSH_UNDER_TEST). Requests are built from the
-// admitted contracts@0.5.0 public region fixture and public helpers; catalogue
+// admitted contracts public region fixture and public helpers; catalogue
 // and world context are that SOURCE/FIXTURE. No world, model, Painter or other
 // peer is involved.
 import test from 'node:test';

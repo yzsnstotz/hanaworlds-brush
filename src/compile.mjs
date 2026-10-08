@@ -2,7 +2,7 @@
 // no persistence, no model access, no clock, no randomness.
 //
 // Every public type, digest and coherence rule comes from the admitted
-// hanaworlds-contracts@0.5.0 package (current lane, which admits target-facts/v4
+// hanaworlds-contracts package (src/contracts.mjs pin) (current lane, which admits target-facts/v4
 // REGION_INSPECTED facts); this module only orders those checks
 // through current public validators and performs the unchanged expansion.
 
@@ -38,7 +38,7 @@ const key = p => `${p[0]},${p[1]},${p[2]}`;
  * INSPECTED and REGION_INSPECTED (target-facts/v4, a first building's inspected
  * region) are both observed world facts bound to the request world. Only
  * PLANNED facts describe a preceding plan; REGION_INSPECTED is never PLANNED.
- * contracts@0.5.0 validateBoundRequest enforces the same world binding first;
+ * contracts validateBoundRequest enforces the same world binding first;
  * this is Brush's own binding and is unit-tested directly.
  */
 export function bindFactsSource(facts, request) {

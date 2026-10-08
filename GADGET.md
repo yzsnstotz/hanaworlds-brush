@@ -12,11 +12,11 @@ with no injected services. The service exposes compile/compileBytes/handshake/st
 Low-level expandEffects requires already validated geometry/materials; public
 compile is the admitted boundary.
 
-The bundled contracts are the unmodified 21-file npm artifact 0.4.2 from source
-`aad7c0ea2a4a9a93dfb13555c46cd98b9b5da777`, SHA256
-`c3528a4fc3f0cdf94245c4d2d8b1cfa5d28db96d1cd00ae74737bdbdfcd26ec6`.
-The imports map uses its root API. `verify:contracts` checks repack hash, inventory
-and file bytes. Only runtime dependency is canonicalize 5.1.0. There are no peer
+Contracts are the installed released package hanaworlds-contracts v0.5.3 (tag commit
+`3457493da209178f815d6950e323e1dc462e8d6c`, 25-file npm artifact SHA256
+`7f2b088b300426ea2536e08904780dc5df94eaf5e341e83cbff0cc3a42362241`); no vendored copy.
+The imports map uses its root API. `verify:contracts` checks name, version, repack hash,
+inventory and file bytes of the package Brush actually resolves. Only runtime dependency is canonicalize 5.1.0. There are no peer
 plugin imports, old wire adapters, authority/grant fields or world ports.
 
 Compile order reuses dfbf8e0: strict UTF-8/duplicate keys/pure JSON; complete current

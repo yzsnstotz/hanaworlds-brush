@@ -1,4 +1,4 @@
-// Re-pin Brush from the vendored contracts copy to an installed hanaworlds-contracts package.
+// Re-pin Brush to an installed hanaworlds-contracts package (first used to drop the vendored copy).
 // Usage: node tools/switch-contracts.mjs --tar /abs/hanaworlds-contracts-X.tgz --spec <npm dependency spec> --revision <contracts commit>
 // The identity (name, version, SHA-256, entry count) is read from the given npm tar, which must be
 // the exact package --spec installs; verify:contracts then checks the installed copy against it.

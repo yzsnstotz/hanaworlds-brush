@@ -24,7 +24,7 @@ export declare class BrushV3 {
 export declare function apply(ctx: {provide(name: typeof serviceName, service: BrushV3): void}): void;
 declare const plugin: {name:typeof name;inject:typeof inject;provide:typeof provide;apply:typeof apply};
 export default plugin;
-/** region-build/v1 CompileRegionBuild (contracts 0.5.0): mapblock-aligned region-operations/v1 chunks. */
+/** region-build/v1 CompileRegionBuild (contracts region v1): mapblock-aligned region-operations/v1 chunks. */
 export type { CompileRegionBuildRequest, CompileRegionBuildResponse, ProtocolHandshake } from '#contracts';
 export declare function compileRegionBuild(request: CompileRegionBuildRequest): CompileRegionBuildResponse;
 export declare function compileRegionBuildBytes(bytes: Uint8Array): CompileRegionBuildResponse;

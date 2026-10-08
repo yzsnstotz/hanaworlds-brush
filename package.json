@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "license": "MIT",
-  "description": "Pure deterministic BUILD/V3 to operations/v3 and region-build/v1 to mapblock region-operations/v1 compiler; contracts 0.5.0, no world mutation",
+  "description": "Pure deterministic BUILD/V3 to operations/v3 and region-build/v1 to mapblock region-operations/v1 compiler; contracts v0.5.3, no world mutation",
   "repository": {
     "type": "git",
     "url": "https://github.com/yzsnstotz/hanaworlds-brush.git"
@@ -20,16 +20,12 @@
     "./package.json": "./package.json"
   },
   "imports": {
-    "#contracts": {
-      "types": "./vendor/hanaworlds-contracts/types/local/index.d.ts",
-      "default": "./vendor/hanaworlds-contracts/dist/local/index.mjs"
-    },
-    "#contracts/package.json": "./vendor/hanaworlds-contracts/package.json",
-    "#contracts/fixtures/*": "./vendor/hanaworlds-contracts/fixtures/local/*.json"
+    "#contracts": "hanaworlds-contracts",
+    "#contracts/package.json": "hanaworlds-contracts/package.json",
+    "#contracts/fixtures/*": "hanaworlds-contracts/fixtures/*"
   },
   "files": [
     "src/",
-    "vendor/",
     "cordis.patch.yml",
     "GADGET.md",
     "NOTICE",
@@ -47,7 +43,6 @@
     "test": "node --test test/local-build.test.mjs",
     "verify:contracts": "node tools/verify-contracts-artifact.mjs",
     "pack:artifact": "npm pack --ignore-scripts --pack-destination artifacts --json",
-    "vendor:contracts": "node tools/vendor-contracts.mjs",
     "typecheck": "tsc --noEmit --strict --module nodenext --moduleResolution nodenext --target es2022 test/consumer.mts",
     "gate": "bash tools/gate-local-build.sh",
     "test:image": "node --test test/image-contracts.test.mjs",
@@ -56,7 +51,8 @@
     "gate:region": "bash tools/gate-region.sh"
   },
   "dependencies": {
-    "canonicalize": "5.1.0"
+    "canonicalize": "5.1.0",
+    "hanaworlds-contracts": "git+https://github.com/yzsnstotz/hanaworlds-contracts.git#3457493da209178f815d6950e323e1dc462e8d6c"
   },
   "types": "./types/index.d.mts",
   "devDependencies": {

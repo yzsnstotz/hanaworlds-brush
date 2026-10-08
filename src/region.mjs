@@ -4,7 +4,7 @@
 // owns every transaction decision; Adapter transports.
 //
 // Every public type, canonical encoding, digest and compatibility rule comes from
-// the admitted hanaworlds-contracts@0.5.0 package; this module only orders those
+// the admitted hanaworlds-contracts package (src/contracts.mjs); this module only orders those
 // public helpers and performs the chunk split.
 
 import { types as nodeTypes } from 'node:util';

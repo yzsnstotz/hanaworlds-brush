@@ -4,7 +4,7 @@ Pure deterministic `BUILD/V3` → `operations/v3` per-cell compiler and
 `region-build/v1` `CompileRegionBuild` → mapblock-aligned `region-operations/v1`
 compiler, packaged as a Cordis plugin providing `hanaworldsBrushV3`. No world
 connection, writes, persistence or model access. Candidate **0.5.0**, contracts
-**0.5.0**; SOURCE/FIXTURE component only. App, model, world and Undo product gates remain unproven.
+**v0.5.3** (installed from the released tag commit); SOURCE/FIXTURE component only. App, model, world and Undo product gates remain unproven.
 
 ```sh
 npm ci --ignore-scripts
@@ -25,10 +25,11 @@ for licenses.
 
 Contracts pin: `src/contracts.mjs` is the only place that names the contracts
 package (`ADMITTED_CONTRACTS`) and the only way tests, preview and
-`verify:contracts` locate it; `package.json` `imports` decide whether `#contracts`
-is the vendored copy or an installed package. `verify:contracts` checks the package
-Brush actually resolves against that identity, wherever it lives. Re-pinning to a
-released package is one step: `node tools/switch-contracts.mjs --tar <released tgz>
+`verify:contracts` locate it; `package.json` `imports` map `#contracts` to the installed
+`hanaworlds-contracts` dependency (no vendored copy). `verify:contracts` checks the package
+Brush actually resolves against that identity (name, version, repack SHA-256, files), so a
+different build with the same version string fails. Re-pinning to another released
+package is one step: `node tools/switch-contracts.mjs --tar <released tgz>
 --spec <npm spec> --revision <commit>` then `npm install`.
 
 Reuse: original Brush `dfbf8e0`, indexed by HanaWorlds
