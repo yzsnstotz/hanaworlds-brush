@@ -7,7 +7,7 @@ test('preview compiles actual Brush region output deterministically and reflects
  const input={sample:'fill',width:18,height:2,depth:3,material:'fixture:stone'};
  const a=compilePreview(input),b=compilePreview({...input});
  assert.equal(a.ok,true);assert.deepEqual(a,b);
- assert.equal(a.compiler.version,'0.5.0');assert.equal(a.cellCount,108);
+ assert.equal(a.compiler.version,'0.5.1');assert.equal(a.cellCount,108);
  assert.deepEqual(a.materials,[{nodeName:'fixture:stone',param2:0,count:108}]);
  assert.equal(a.chunks.length,2);assert.equal(a.chunks.reduce((n,c)=>n+c.count,0),108);
  assert.ok(a.chunks.every(c=>/^[a-f0-9]{64}$/.test(c.operationDigest)));

@@ -64,7 +64,7 @@ window.__ModuleLoader__.load({
      h('div',{style:{fontSize:11,fontWeight:650,letterSpacing:2,color:teal,marginBottom:10}},'BRUSH / 开发面板'),
      h('h1',{style:{fontSize:28,fontWeight:650,margin:'0 0 10px'}},'Brush 编译预览'),
      h('p',{style:{color:muted,fontSize:14,margin:'0 0 22px'}},'选择一个样例，看看它会被编译成哪些方块。'),
-     h('div',{style:{padding:'12px 16px',marginBottom:24,background:'#e9f3ef',border:'1px solid #c9e2d7',borderRadius:10,fontSize:13,color:'#23594d'}},'FIXTURE 样例：材料目录、世界与会话均为测试数据。Brush 0.5.0 在 Host 编译；此面板没有世界写入操作。'),
+     h('div',{style:{padding:'12px 16px',marginBottom:24,background:'#e9f3ef',border:'1px solid #c9e2d7',borderRadius:10,fontSize:13,color:'#23594d'}},'FIXTURE 样例：材料目录、世界与会话均为测试数据。Brush 0.5.1 在 Host 编译；此面板没有世界写入操作。'),
      h('div',{style:{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,300px),1fr))',gap:22,alignItems:'start'}},inputs,h('section',{style:{...card,minHeight:300}},title('02 / 方块预览'),preview)),
      result?h('section',{style:{...card,marginTop:22}},h('div',{style:{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(260px,1fr))',gap:24}},materials,chunks,identity)):null));
   }

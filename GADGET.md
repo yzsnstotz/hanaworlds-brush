@@ -1,4 +1,4 @@
-# Brush 0.5.0 current public boundary
+# Brush 0.5.1 current public boundary
 
 Evidence: SOURCE/FIXTURE. This package has no external runtime of its own.
 Actual pack installation and execution do not prove App/world/model/Undo or
@@ -12,9 +12,9 @@ with no injected services. The service exposes compile/compileBytes/handshake/st
 Low-level expandEffects requires already validated geometry/materials; public
 compile is the admitted boundary.
 
-Contracts are the installed released package hanaworlds-contracts v0.5.3 (tag commit
-`3457493da209178f815d6950e323e1dc462e8d6c`, 25-file npm artifact SHA256
-`7f2b088b300426ea2536e08904780dc5df94eaf5e341e83cbff0cc3a42362241`); no vendored copy.
+Contracts are the installed released package hanaworlds-contracts v0.5.4 (tag commit
+`85687fc3811e4c8ee6e69410d46d8026e19d2c75`, 26-file npm artifact SHA256
+`b920097dee8bf57ef44cc9ca964829e568b14c9e1b15a77bf4599f69391062ec`); no vendored copy.
 The imports map uses its root API. `verify:contracts` checks name, version, repack hash,
 inventory and file bytes of the package Brush actually resolves. Only runtime dependency is canonicalize 5.1.0. There are no peer
 plugin imports, old wire adapters, authority/grant fields or world ports.

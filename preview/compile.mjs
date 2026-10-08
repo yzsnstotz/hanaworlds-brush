@@ -9,7 +9,7 @@ const {ContractError,encodeRegionBlock,regionBlockBox,digestValue,expandRegionBl
 const errorText=error=>({CATALOGUE_MISMATCH:'材质不在 fixture 材料目录中。',UNSUPPORTED_MUTATION_SEMANTICS:'该材质参数不能用于此样例。',LIMIT_EXCEEDED:'输入超出了本机编译器可处理的容量。',SCHEMA_INVALID:'样例输入不合法，请检查尺寸和材质。'}[error.code]??`编译被拒绝：${error.code}。`);
 
 export function compilePreview(input) {
- if(version!=='0.5.0') throw new Error(`此面板需要 Brush 0.5.0，当前为 ${version}`);
+ if(version!=='0.5.1') throw new Error(`此面板需要 Brush 0.5.1，当前为 ${version}`);
  if(!input || !['house','fill','carve','invalid'].includes(input.sample)) return {ok:false,error:'请选择一个样例。'};
  const size=[input.width,input.height,input.depth];
  if(!size.every(n=>Number.isSafeInteger(n)&&n>0)) return {ok:false,error:'宽、高、深都必须是正整数。'};
@@ -26,7 +26,7 @@ export function compilePreview(input) {
   }
   const block=encodeRegionBlock({origin:[0,0,0],size,palette,indices});
   const build={...fixture.compileRequest.build,documentId:'brush-preview-fixture',block,declaredBounds:regionBlockBox(block)};
-  const request={...fixture.compileRequest,requestId:'brush-preview-fixture',build,buildDigest:digestValue('region-build',build).sha256,compilerRevision:'hanaworlds-brush@0.5.0'};
+  const request={...fixture.compileRequest,requestId:'brush-preview-fixture',build,buildDigest:digestValue('region-build',build).sha256,compilerRevision:'hanaworlds-brush@0.5.1'};
   const compiled=compileRegionBuild(request);
   if(compiled.error) return {ok:false,error:errorText(compiled.error),code:compiled.error.code};
   const cells=[],counts=new Map(),chunks=[];
@@ -41,7 +41,7 @@ export function compilePreview(input) {
    }
    chunks.push({chunkPos:chunk.chunkPos,count,operationDigest:digestValue('region-operations',{...compiled.result.projection,chunks:[chunk]}).sha256});
   }
-  return {ok:true,evidence:'SOURCE/FIXTURE 输入；Brush 0.5.0 在 Host 真实编译；无世界写入',compiler:{name:'hanaworlds-brush',version,runtime:'HOST'},sample:input.sample,size,cellCount:cells.length,operationDigest:compiled.result.operationDigest,materials:[...counts].map(([key,count])=>({...JSON.parse(key),count})).sort((a,b)=>a.nodeName.localeCompare(b.nodeName)||a.param2-b.param2),chunks,cells};
+  return {ok:true,evidence:'SOURCE/FIXTURE 输入；Brush 0.5.1 在 Host 真实编译；无世界写入',compiler:{name:'hanaworlds-brush',version,runtime:'HOST'},sample:input.sample,size,cellCount:cells.length,operationDigest:compiled.result.operationDigest,materials:[...counts].map(([key,count])=>({...JSON.parse(key),count})).sort((a,b)=>a.nodeName.localeCompare(b.nodeName)||a.param2-b.param2),chunks,cells};
  } catch(error) {
   if(error instanceof ContractError)return {ok:false,error:errorText(error),code:error.code};
   if(error instanceof RangeError)return {ok:false,error:'输入超出了本机编译器可处理的容量。',code:'LIMIT_EXCEEDED'};

@@ -2,13 +2,13 @@ HanaWorlds Brush — Copyright (c) 2026 yzsnstotz
 Owned source: MIT (LICENSE).
 
 Installed runtime dependency (not bundled):
-hanaworlds-contracts 0.5.3 — MIT
-Source: https://github.com/yzsnstotz/hanaworlds-contracts, tag v0.5.3
-Revision: 3457493da209178f815d6950e323e1dc462e8d6c (pinned by commit)
-Artifact SHA256: 7f2b088b300426ea2536e08904780dc5df94eaf5e341e83cbff0cc3a42362241
+hanaworlds-contracts 0.5.4 — MIT
+Source: https://github.com/yzsnstotz/hanaworlds-contracts, tag v0.5.4
+Revision: 85687fc3811e4c8ee6e69410d46d8026e19d2c75 (pinned by commit)
+Artifact SHA256: b920097dee8bf57ef44cc9ca964829e568b14c9e1b15a77bf4599f69391062ec
 License text: node_modules/hanaworlds-contracts/LICENSE and NOTICE.
 Use: BUILD/V3 / operations/v3 and region-build/v1 public types, strict decode,
-geometry, digests, association and witness coherence. Exact 25-file npm package,
+geometry, digests, association and witness coherence. Exact 26-file npm package,
 verified by repack (npm run verify:contracts).
 
 Installed runtime dependency:

@@ -3,8 +3,8 @@
 Pure deterministic `BUILD/V3` → `operations/v3` per-cell compiler and
 `region-build/v1` `CompileRegionBuild` → mapblock-aligned `region-operations/v1`
 compiler, packaged as a Cordis plugin providing `hanaworldsBrushV3`. No world
-connection, writes, persistence or model access. Candidate **0.5.0**, contracts
-**v0.5.3** (installed from the released tag commit); SOURCE/FIXTURE component only. App, model, world and Undo product gates remain unproven.
+connection, writes, persistence or model access. Candidate **0.5.1**, contracts
+**v0.5.4** (installed from the released tag commit); SOURCE/FIXTURE component only. App, model, world and Undo product gates remain unproven.
 
 ```sh
 npm ci --ignore-scripts
