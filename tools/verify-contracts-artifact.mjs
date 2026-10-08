@@ -1,17 +1,20 @@
-// Verify that vendor/hanaworlds-contracts (or the directory given as argv[2],
-// e.g. an installed copy) is byte-for-byte the independently admitted
-// hanaworlds-contracts artifact named in tools/admitted-contracts.mjs: repack it with npm (deterministic tar)
-// and compare SHA-256, then require the directory to contain exactly the
-// packed files with identical bytes. Exit 0 only on an exact match.
+// Verify that the hanaworlds-contracts package a Brush resolves through #contracts
+// (this repository, or the installed Brush root given as argv[2]) is byte-for-byte
+// the admitted package named by that Brush's src/contracts.mjs: repack it with npm
+// (deterministic tar) and compare name, version, SHA-256 and entry count, then
+// require the directory to hold exactly the packed files with identical bytes.
+// Where the package lives (vendored or installed) is not part of the check.
+// Exit 0 only on an exact match.
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { mkdtempSync, mkdirSync, readFileSync, readdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, relative, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { ADMITTED_CONTRACTS } from './admitted-contracts.mjs';
+import { dirname, join, relative, resolve } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
-const pkgDir = resolve(process.argv[2] ?? fileURLToPath(new URL('../vendor/hanaworlds-contracts', import.meta.url)));
+const brushRoot = resolve(process.argv[2] ?? fileURLToPath(new URL('..', import.meta.url)));
+const { ADMITTED_CONTRACTS, contractsPackageUrl } = await import(pathToFileURL(join(brushRoot, 'src/contracts.mjs')).href);
+const pkgDir = dirname(fileURLToPath(contractsPackageUrl));
 const listFiles = dir => readdirSync(dir, { recursive: true, withFileTypes: true })
   .filter(d => d.isFile()).map(d => relative(dir, join(d.parentPath, d.name))).sort();
 const pkg = JSON.parse(readFileSync(join(pkgDir, 'package.json'), 'utf8'));
@@ -28,7 +31,7 @@ try {
   const mismatched = packedFiles.filter(f => !readFileSync(join(extract, 'package', f)).equals(readFileSync(join(pkgDir, f))));
   const extra = presentFiles.filter(f => !packedFiles.includes(f));
   const report = {
-    admitted: ADMITTED_CONTRACTS, checkedDir: pkgDir, name: pkg.name, version: pkg.version,
+    admitted: ADMITTED_CONTRACTS, brushRoot, checkedDir: pkgDir, name: pkg.name, version: pkg.version,
     repackSha256: sha256, entries: packed.entryCount, mismatchedFiles: mismatched, extraFiles: extra,
     match: pkg.name === ADMITTED_CONTRACTS.name && pkg.version === ADMITTED_CONTRACTS.version &&
       sha256 === ADMITTED_CONTRACTS.sha256 && packed.entryCount === ADMITTED_CONTRACTS.entries &&

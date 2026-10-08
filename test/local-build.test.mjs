@@ -3,8 +3,9 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 const entry=import.meta.resolve(process.env.BRUSH_UNDER_TEST ?? '../src/index.mjs');
 const brush=await import(entry);
-const a=await import(new URL('../vendor/hanaworlds-contracts/dist/local/index.mjs',entry));
-const fixture=JSON.parse(readFileSync(new URL('../vendor/hanaworlds-contracts/fixtures/local/main.json',entry)));
+const pin=await import(new URL('./contracts.mjs',entry));
+const a=await import(pin.contractsUrl);
+const fixture=JSON.parse(readFileSync(new URL(pin.contractsFixtureUrl('main'))));
 const D=(kind,value)=>a.digestValue(kind,value).sha256;
 function request() {
  const r=fixture.request,b=structuredClone(fixture.response.result.build);

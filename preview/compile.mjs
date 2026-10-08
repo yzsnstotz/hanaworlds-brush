@@ -2,8 +2,9 @@
 import {readFileSync} from 'node:fs';
 import {compileRegionBuild, version} from 'hanaworlds-brush';
 const brushEntry=import.meta.resolve('hanaworlds-brush');
-const contracts=await import(new URL('../vendor/hanaworlds-contracts/dist/local/index.mjs',brushEntry));
-const fixture=JSON.parse(readFileSync(new URL('../vendor/hanaworlds-contracts/fixtures/local/region.json',brushEntry)));
+const pin=await import(new URL('./contracts.mjs',brushEntry));
+const contracts=await import(pin.contractsUrl);
+const fixture=JSON.parse(readFileSync(new URL(pin.contractsFixtureUrl('region'))));
 const {ContractError,encodeRegionBlock,regionBlockBox,digestValue,expandRegionBlock}=contracts;
 const errorText=error=>({CATALOGUE_MISMATCH:'材质不在 fixture 材料目录中。',UNSUPPORTED_MUTATION_SEMANTICS:'该材质参数不能用于此样例。',LIMIT_EXCEEDED:'输入超出了本机编译器可处理的容量。',SCHEMA_INVALID:'样例输入不合法，请检查尺寸和材质。'}[error.code]??`编译被拒绝：${error.code}。`);
 

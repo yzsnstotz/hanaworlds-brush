@@ -21,8 +21,15 @@ actual pack and an independent installed-package consumer. It removes temporary
 build/install environments and retains one current tar and full logs.
 
 See [GADGET.md](GADGET.md) for the public API and invariants and [NOTICE](NOTICE)
-for licenses. Regenerate bundled contracts only from the admitted 0.4.2 tar:
-`node tools/vendor-contracts.mjs /absolute/hanaworlds-contracts-0.4.2.tgz`.
+for licenses.
+
+Contracts pin: `src/contracts.mjs` is the only place that names the contracts
+package (`ADMITTED_CONTRACTS`) and the only way tests, preview and
+`verify:contracts` locate it; `package.json` `imports` decide whether `#contracts`
+is the vendored copy or an installed package. `verify:contracts` checks the package
+Brush actually resolves against that identity, wherever it lives. Re-pinning to a
+released package is one step: `node tools/switch-contracts.mjs --tar <released tgz>
+--spec <npm spec> --revision <commit>` then `npm install`.
 
 Reuse: original Brush `dfbf8e0`, indexed by HanaWorlds
 `bluemap/DEFERRED.md` → “后延 S1-02 图片建筑：丰富skill，基础Painter保留” and

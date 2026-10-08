@@ -3,17 +3,18 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 const entry=import.meta.resolve(process.env.BRUSH_UNDER_TEST ?? '../src/index.mjs');
 const brush=await import(entry);
-const a=await import(new URL('../vendor/hanaworlds-contracts/dist/local/index.mjs',entry));
-test('per-cell consumer advertises the exact admitted contracts 0.5.0 handshake and refuses the older 0.4.2 package',()=>{
- assert.equal(a.version,'0.5.0');
+const pin=await import(new URL('./contracts.mjs',entry));
+const a=await import(pin.contractsUrl);
+test('per-cell consumer advertises the exact admitted contracts handshake and refuses the older 0.4.2 package',()=>{
+ assert.equal(a.version,pin.ADMITTED_CONTRACTS.version);
  assert.equal(brush.version,JSON.parse(readFileSync(new URL('../package.json',entry))).version);
  const service=new brush.BrushV3();
- assert.equal(service.status().contracts,'hanaworlds-contracts@0.5.0');
+ assert.equal(service.status().contracts,`${pin.ADMITTED_CONTRACTS.name}@${pin.ADMITTED_CONTRACTS.version}`);
  assert.equal(a.checkContractHandshake(service.handshake()).result,'HANDSHAKE_VERSION_MATCH');
  assert.throws(()=>a.checkContractHandshake({...service.handshake(),contracts:'hanaworlds-contracts@0.4.2'}),e=>e.code==='UNSUPPORTED_VERSION');
 });
 test('installed current package compiles the unchanged public BUILD path through library/raw/Cordis',()=>{
- const fixture=JSON.parse(readFileSync(new URL('../vendor/hanaworlds-contracts/fixtures/local/main.json',entry)));
+ const fixture=JSON.parse(readFileSync(new URL(pin.contractsFixtureUrl('main'))));
  const r=fixture.request,b=structuredClone(fixture.response.result.build);
  const D=(kind,value)=>a.digestValue(kind,value).sha256;
  const config={profileVersion:'compilation-config/v2',backendProfileId:'static-local',worldeditRevision:'static-1',nodeWriteSemantics:'explicit-nodeName-param2-static-v2',overlapRule:'last-writer-wins',effectOrder:'numeric-x-y-z',compressionRule:'exact-final-effects-only'};
