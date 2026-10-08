@@ -50,7 +50,7 @@ npm --prefix preview pack --ignore-scripts --pack-destination /ABSOLUTE/EVIDENCE
 
 ## 许可
 
-- 本面板：0.1.0 · MIT · 本仓 · fixture 开发面板。
+- 本面板：0.1.1 · MIT · 本仓 · fixture 开发面板。
 - hanaworlds-brush：0.5.1 · MIT · 本仓已交付包 · Host 编译（peer）。
 - hanaworlds-contracts：0.5.4 · MIT · Brush 依赖的已发布包（tag v0.5.4）· fixture 与区域编码/校验（不新增副本）。
 - DSH typert-protocol：0.2.0-rc.2 · MIT · official deepseek-ai/deepseek-harness / 已装 App · Host Remote（peer）。
