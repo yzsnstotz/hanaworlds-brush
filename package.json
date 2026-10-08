@@ -52,7 +52,7 @@
   },
   "dependencies": {
     "canonicalize": "5.1.0",
-    "hanaworlds-contracts": "git+https://github.com/yzsnstotz/hanaworlds-contracts.git#3457493da209178f815d6950e323e1dc462e8d6c"
+    "hanaworlds-contracts": "git+https://github.com/yzsnstotz/hanaworlds-contracts.git#0beeff5774db476c0128683ca6107a28bdcdcbee"
   },
   "types": "./types/index.d.mts",
   "devDependencies": {

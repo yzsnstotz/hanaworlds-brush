@@ -3,11 +3,11 @@
 // Tests, preview and tools/verify-contracts-artifact.mjs locate contracts only through here,
 // so a re-pin is: tools/switch-contracts.mjs (imports + dependency + this identity).
 export const ADMITTED_CONTRACTS = Object.freeze({
-  name: 'hanaworlds-contracts', version: '0.5.3',
+  name: 'hanaworlds-contracts', version: '0.5.4-rc.1',
   source: 'https://github.com/yzsnstotz/hanaworlds-contracts',
-  revision: '3457493da209178f815d6950e323e1dc462e8d6c',
-  sha256: '7f2b088b300426ea2536e08904780dc5df94eaf5e341e83cbff0cc3a42362241',
-  entries: 25,
+  revision: '0beeff5774db476c0128683ca6107a28bdcdcbee',
+  sha256: '51902797a167a222d812c344871bb1c0774ae775fb0026d70381edd4c08f17ed',
+  entries: 26,
 });
 /** URL of the contracts entry module Brush itself imports as #contracts. */
 export const contractsUrl = import.meta.resolve('#contracts');
