@@ -20,16 +20,21 @@ function json(res, status, value) {
   res.end(JSON.stringify(value));
 }
 const server = createServer(async (req, res) => {
-  if (req.headers.host !== `${host}:${port}` || (req.headers.origin && req.headers.origin !== origin)) {
+  // 127.0.0.1 and localhost both name this machine; anything else is refused (DNS rebinding).
+  const okHosts = [`${host}:${port}`, `localhost:${port}`];
+  if (!okHosts.includes(req.headers.host) || (req.headers.origin && !okHosts.map(h => `http://${h}`).includes(req.headers.origin))) {
     json(res, 403, {ok: false, error: {message: '请从本机 Brush 网页编译。'}}); return;
   }
-  if (req.method === 'GET' && resources.has(req.url)) {
-    const {bytes, type} = resources.get(req.url);
+  // Any page path that is not an asset or the API shows the page itself, so a copied link with trailing text still opens.
+  let path = new URL(req.url, origin).pathname;
+  if (req.method === 'GET' && !resources.has(path) && !path.startsWith('/api/')) path = '/';
+  if (req.method === 'GET' && resources.has(path)) {
+    const {bytes, type} = resources.get(path);
     res.writeHead(200, {'Content-Type': type, 'Cache-Control': 'no-store'});
     res.end(bytes);
     return;
   }
-  if (req.method !== 'POST' || req.url !== '/api/compile') {
+  if (req.method !== 'POST' || path !== '/api/compile') {
     json(res, 404, {ok: false, error: {message: '没有这个网页入口。'}}); return;
   }
   if (!req.headers['content-type']?.startsWith('application/json')) {
