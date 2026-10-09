@@ -13,7 +13,7 @@ Low-level expandEffects requires already validated geometry/materials; public
 compile is the admitted boundary.
 
 Contracts are installed from the contracts source git released tags, range
-`#semver:^1.0.0-rc.2` (npm caret: 1.x from 1.0.0-rc.2; of prereleases only 1.0.0-rc.N, N ≥ 2); no vendored copy, commit or byte pin.
+`#semver:^1.0.0` (npm caret: >=1.0.0 <2.0.0; no prereleases); no vendored copy, commit or byte pin.
 Handshake/schema versions are decided by the contracts same-major predicate.
 The imports map uses its root API. `verify:contracts` checks name, range, inventory and
 file bytes of the package Brush actually resolves and reports its version/repack hash. Only runtime dependency is canonicalize 5.1.0. There are no peer
