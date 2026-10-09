@@ -1,10 +1,10 @@
 {
   "name": "hanaworlds-brush",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "private": true,
   "type": "module",
   "license": "MIT",
-  "description": "Pure deterministic BUILD/V3 to operations/v3 and region-build/v1 to mapblock region-operations/v1 compiler; contracts ^0.5.6 (same-major), no world mutation",
+  "description": "Pure deterministic BUILD/V3 to operations/v3 and region-build/v1 to mapblock region-operations/v1 compiler; contracts ^1.0.0-rc.1 (same-major), no world mutation",
   "repository": {
     "type": "git",
     "url": "https://github.com/yzsnstotz/hanaworlds-brush.git"
@@ -52,7 +52,7 @@
   },
   "dependencies": {
     "canonicalize": "5.1.0",
-    "hanaworlds-contracts": "git+https://github.com/yzsnstotz/hanaworlds-contracts.git#semver:^0.5.6"
+    "hanaworlds-contracts": "git+https://github.com/yzsnstotz/hanaworlds-contracts.git#semver:^1.0.0-rc.1"
   },
   "types": "./types/index.d.mts",
   "devDependencies": {

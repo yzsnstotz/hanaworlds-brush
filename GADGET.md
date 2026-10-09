@@ -1,4 +1,4 @@
-# Brush 0.5.2 current public boundary
+# Brush 0.5.3 current public boundary
 
 Evidence: SOURCE/FIXTURE. This package has no external runtime of its own.
 Actual pack installation and execution do not prove App/world/model/Undo or
@@ -13,7 +13,7 @@ Low-level expandEffects requires already validated geometry/materials; public
 compile is the admitted boundary.
 
 Contracts are installed from the contracts source git released tags, range
-`#semver:^0.5.6` (npm caret: 0.5.x, x ≥ 6); no vendored copy, commit or byte pin.
+`#semver:^1.0.0-rc.1` (npm caret: 1.x from 1.0.0-rc.1; of prereleases only 1.0.0-rc.N, N ≥ 1); no vendored copy, commit or byte pin.
 Handshake/schema versions are decided by the contracts same-major predicate.
 The imports map uses its root API. `verify:contracts` checks name, range, inventory and
 file bytes of the package Brush actually resolves and reports its version/repack hash. Only runtime dependency is canonicalize 5.1.0. There are no peer

@@ -55,5 +55,5 @@ const server = createServer(async (req, res) => {
   }
 });
 server.on('error', error => { console.error(error); process.exitCode = 1; });
-server.listen(port, host, () => console.log(`Brush preview ready: ${origin}/ · Node ${process.version} · Brush 0.5.2 · FIXTURE`));
+server.listen(port, host, () => console.log(`Brush preview ready: ${origin}/ · Node ${process.version} · Brush 0.5.3 · FIXTURE`));
 for (const signal of ['SIGTERM', 'SIGINT']) process.on(signal, () => server.close());

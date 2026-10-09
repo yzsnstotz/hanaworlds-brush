@@ -1,6 +1,6 @@
 // Verify that the hanaworlds-contracts package a Brush resolves through #contracts
 // (this repository, or the installed Brush root given as argv[2]) is admitted by that
-// Brush's src/contracts.mjs: same name, a release version inside the declared caret range,
+// Brush's src/contracts.mjs: same name, a version inside the declared caret range (npm prerelease rule),
 // and a directory holding exactly its own npm-packed files with identical bytes (no extra
 // or edited files). Version, repack SHA-256 and entry count are reported as provenance, not pinned.
 // Where the package lives (vendored or installed) is not part of the check.
