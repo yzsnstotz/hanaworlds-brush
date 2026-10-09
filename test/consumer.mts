@@ -13,7 +13,7 @@ function consume(q:BuildDocumentRequest) {
 }
 void consume;
 
-const packageVersion: "0.5.3" = version;
+const packageVersion: "0.6.0" = version;
 void packageVersion;
 
 import {compileRegionBuild,compileRegionBuildBytes,protocolHandshake,type CompileRegionBuildRequest,type CompileRegionBuildResponse,type ProtocolHandshake} from 'hanaworlds-brush';

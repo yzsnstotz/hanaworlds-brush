@@ -3,7 +3,7 @@
 Pure deterministic `BUILD/V4` → `operations/v3` per-cell compiler and
 `region-build/v1` `CompileRegionBuild` → mapblock-aligned `region-operations/v1`
 compiler, packaged as a Cordis plugin providing `hanaworldsBrushV3`. No world
-connection, writes, persistence or model access. Source **0.5.3**, contracts
+connection, writes, persistence or model access. Source **0.6.0**, contracts
 **`#semver:^2.0.0-rc.1`** (contracts source git released tags, same-major handshake/schema); SOURCE/FIXTURE component only. App, model, world and Undo product gates remain unproven.
 
 ```sh

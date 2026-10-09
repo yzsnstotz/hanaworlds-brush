@@ -5,7 +5,7 @@ export declare function compileBuildDocumentBytes(bytes: Uint8Array): BuildDocum
 /** Caller validates geometry/materials before using the low-level expander. */
 export declare function expandEffects(operations: readonly SetBox[], materials: MaterialMap): Effects;
 export declare const name: 'hanaworlds-brush';
-export declare const version: '0.5.3';
+export declare const version: '0.6.0';
 export declare const serviceName: 'hanaworldsBrushV3';
 export declare const provide: typeof serviceName;
 export declare const inject: readonly [];

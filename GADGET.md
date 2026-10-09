@@ -1,4 +1,4 @@
-# Brush 0.5.3 current public boundary
+# Brush 0.6.0 current public boundary
 
 Evidence: SOURCE/FIXTURE. This package has no external runtime of its own.
 Actual pack installation and execution do not prove App/world/model/Undo or
