@@ -1,15 +1,17 @@
 // This dev panel prepares fixture inputs and summarizes outputs; Brush owns all compilation.
 import {readFileSync} from 'node:fs';
-import {compileRegionBuild, version} from 'hanaworlds-brush';
+import {compileRegionBuild, protocolHandshake, version} from 'hanaworlds-brush';
 const brushEntry=import.meta.resolve('hanaworlds-brush');
 const pin=await import(new URL('./contracts.mjs',brushEntry));
 const contracts=await import(pin.contractsUrl);
 const fixture=JSON.parse(readFileSync(new URL(pin.contractsFixtureUrl('region'))));
-const {ContractError,encodeRegionBlock,regionBlockBox,digestValue,expandRegionBlock}=contracts;
+const {ContractError,encodeRegionBlock,regionBlockBox,digestValue,expandRegionBlock,checkProtocolCompatibility,protocolRequirement}=contracts;
+// Brush compatibility is decided by protocol major + capability (protocol-handshake/v1), never by an exact package version.
+const brushCompatible=()=>{try{checkProtocolCompatibility(protocolHandshake,[protocolRequirement('region-build/v1',['region-build/v1:compile-mapblock-chunks'])]);return true;}catch{return false;}};
 const errorText=error=>({CATALOGUE_MISMATCH:'材质不在 fixture 材料目录中。',UNSUPPORTED_MUTATION_SEMANTICS:'该材质参数不能用于此样例。',LIMIT_EXCEEDED:'输入超出了本机编译器可处理的容量。',SCHEMA_INVALID:'样例输入不合法，请检查尺寸和材质。'}[error.code]??`编译被拒绝：${error.code}。`);
 
 export function compilePreview(input) {
- if(version!=='0.5.1') throw new Error(`此面板需要 Brush 0.5.1，当前为 ${version}`);
+ if(!brushCompatible()) throw new Error(`此面板需要支持 region-build/v1 的 Brush，当前为 ${version}`);
  if(!input || !['house','fill','carve','invalid'].includes(input.sample)) return {ok:false,error:'请选择一个样例。'};
  const size=[input.width,input.height,input.depth];
  if(!size.every(n=>Number.isSafeInteger(n)&&n>0)) return {ok:false,error:'宽、高、深都必须是正整数。'};
@@ -26,7 +28,7 @@ export function compilePreview(input) {
   }
   const block=encodeRegionBlock({origin:[0,0,0],size,palette,indices});
   const build={...fixture.compileRequest.build,documentId:'brush-preview-fixture',block,declaredBounds:regionBlockBox(block)};
-  const request={...fixture.compileRequest,requestId:'brush-preview-fixture',build,buildDigest:digestValue('region-build',build).sha256,compilerRevision:'hanaworlds-brush@0.5.1'};
+  const request={...fixture.compileRequest,requestId:'brush-preview-fixture',build,buildDigest:digestValue('region-build',build).sha256,compilerRevision:`hanaworlds-brush@${version}`};
   const compiled=compileRegionBuild(request);
   if(compiled.error) return {ok:false,error:errorText(compiled.error),code:compiled.error.code};
   const cells=[],counts=new Map(),chunks=[];
@@ -41,7 +43,7 @@ export function compilePreview(input) {
    }
    chunks.push({chunkPos:chunk.chunkPos,count,operationDigest:digestValue('region-operations',{...compiled.result.projection,chunks:[chunk]}).sha256});
   }
-  return {ok:true,evidence:'SOURCE/FIXTURE 输入；Brush 0.5.1 在 Host 真实编译；无世界写入',compiler:{name:'hanaworlds-brush',version,runtime:'HOST'},sample:input.sample,size,cellCount:cells.length,operationDigest:compiled.result.operationDigest,materials:[...counts].map(([key,count])=>({...JSON.parse(key),count})).sort((a,b)=>a.nodeName.localeCompare(b.nodeName)||a.param2-b.param2),chunks,cells};
+  return {ok:true,evidence:`SOURCE/FIXTURE 输入；Brush ${version} 在 Host 真实编译；无世界写入`,compiler:{name:'hanaworlds-brush',version,runtime:'HOST'},sample:input.sample,size,cellCount:cells.length,operationDigest:compiled.result.operationDigest,materials:[...counts].map(([key,count])=>({...JSON.parse(key),count})).sort((a,b)=>a.nodeName.localeCompare(b.nodeName)||a.param2-b.param2),chunks,cells};
  } catch(error) {
   if(error instanceof ContractError)return {ok:false,error:errorText(error),code:error.code};
   if(error instanceof RangeError)return {ok:false,error:'输入超出了本机编译器可处理的容量。',code:'LIMIT_EXCEEDED'};

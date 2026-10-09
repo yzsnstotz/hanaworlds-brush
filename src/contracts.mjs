@@ -1,13 +1,11 @@
-// The one place that names the hanaworlds-contracts package this Brush is pinned to.
-// package.json "imports" map #contracts to the installed hanaworlds-contracts dependency; ADMITTED_CONTRACTS is the exact package identity that resolution must yield.
+// The one place that names the hanaworlds-contracts dependency this Brush admits.
+// package.json "imports" map #contracts to the installed hanaworlds-contracts dependency, declared as the
+// contracts source git `#semver:` range below; ADMITTED_CONTRACTS is that range, not a commit or byte pin.
 // Tests, preview and tools/verify-contracts-artifact.mjs locate contracts only through here,
-// so a re-pin is: tools/switch-contracts.mjs (imports + dependency + this identity).
+// so raising the floor is: this range + the package.json dependency, then `npm install`.
 export const ADMITTED_CONTRACTS = Object.freeze({
-  name: 'hanaworlds-contracts', version: '0.5.4',
+  name: 'hanaworlds-contracts', range: '^0.5.6',
   source: 'https://github.com/yzsnstotz/hanaworlds-contracts',
-  revision: '85687fc3811e4c8ee6e69410d46d8026e19d2c75',
-  sha256: 'b920097dee8bf57ef44cc9ca964829e568b14c9e1b15a77bf4599f69391062ec',
-  entries: 26,
 });
 /** URL of the contracts entry module Brush itself imports as #contracts. */
 export const contractsUrl = import.meta.resolve('#contracts');
@@ -15,3 +13,11 @@ export const contractsUrl = import.meta.resolve('#contracts');
 export const contractsPackageUrl = import.meta.resolve('#contracts/package.json');
 /** URL of a public contracts fixture by name, e.g. 'main' or 'region'. */
 export const contractsFixtureUrl = name => import.meta.resolve(`#contracts/fixtures/${name}`);
+/** npm caret semantics for a release version (0.x: the minor is the compatibility line); prereleases never satisfy. */
+export function satisfiesCaret(version, range) {
+  const v = /^(\d+)\.(\d+)\.(\d+)$/.exec(version), r = /^\^(\d+)\.(\d+)\.(\d+)$/.exec(range);
+  if (!v || !r) return false;
+  const [a, b] = [v, r].map(m => m.slice(1).map(Number));
+  const cmp = (a[0] - b[0]) || (a[1] - b[1]) || (a[2] - b[2]);
+  return cmp >= 0 && a[0] === b[0] && (b[0] > 0 || a[1] === b[1]) && (b[0] > 0 || b[1] > 0 || a[2] === b[2]);
+}

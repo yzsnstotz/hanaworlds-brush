@@ -3,8 +3,8 @@
 Pure deterministic `BUILD/V3` → `operations/v3` per-cell compiler and
 `region-build/v1` `CompileRegionBuild` → mapblock-aligned `region-operations/v1`
 compiler, packaged as a Cordis plugin providing `hanaworldsBrushV3`. No world
-connection, writes, persistence or model access. Candidate **0.5.1**, contracts
-**v0.5.4** (installed from the released tag commit); SOURCE/FIXTURE component only. App, model, world and Undo product gates remain unproven.
+connection, writes, persistence or model access. Source **0.5.2**, contracts
+**`#semver:^0.5.6`** (contracts source git released tags, same-major handshake/schema); SOURCE/FIXTURE component only. App, model, world and Undo product gates remain unproven.
 
 ```sh
 npm ci --ignore-scripts
@@ -23,14 +23,16 @@ build/install environments and retains one current tar and full logs.
 See [GADGET.md](GADGET.md) for the public API and invariants and [NOTICE](NOTICE)
 for licenses.
 
-Contracts pin: `src/contracts.mjs` is the only place that names the contracts
-package (`ADMITTED_CONTRACTS`) and the only way tests, preview and
+Contracts range: `src/contracts.mjs` is the only place that names the contracts
+dependency (`ADMITTED_CONTRACTS`, a caret range) and the only way tests, preview and
 `verify:contracts` locate it; `package.json` `imports` map `#contracts` to the installed
-`hanaworlds-contracts` dependency (no vendored copy). `verify:contracts` checks the package
-Brush actually resolves against that identity (name, version, repack SHA-256, files), so a
-different build with the same version string fails. Re-pinning to another released
-package is one step: `node tools/switch-contracts.mjs --tar <released tgz>
---spec <npm spec> --revision <commit>` then `npm install`.
+`hanaworlds-contracts` dependency `git+https://github.com/yzsnstotz/hanaworlds-contracts.git#semver:^0.5.6`
+(no vendored copy, no commit or byte pin; the lock records what npm resolved). `verify:contracts`
+checks that the package Brush actually resolves has the right name, a version inside that range
+(npm caret semantics: 0.5.x, x ≥ 6) and exactly its own packed files, and reports its version and
+repack SHA-256 as provenance. Handshake and schema compatibility are the contracts SDK's
+same-major predicate; Brush adds no exact version check. Raising the floor for a new field is
+the range in `src/contracts.mjs` and `package.json`, then `npm install`.
 
 Reuse: original Brush `dfbf8e0`, indexed by HanaWorlds
 `bluemap/DEFERRED.md` → “后延 S1-02 图片建筑：丰富skill，基础Painter保留” and

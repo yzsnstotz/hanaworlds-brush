@@ -5,13 +5,14 @@ const entry=import.meta.resolve(process.env.BRUSH_UNDER_TEST ?? '../src/index.mj
 const brush=await import(entry);
 const pin=await import(new URL('./contracts.mjs',entry));
 const a=await import(pin.contractsUrl);
-test('per-cell consumer advertises the exact admitted contracts handshake and refuses the older 0.4.2 package',()=>{
- assert.equal(a.version,pin.ADMITTED_CONTRACTS.version);
+test('per-cell consumer advertises the installed contracts handshake; same major accepted, other major refused',()=>{
+ assert.ok(pin.satisfiesCaret(a.version,pin.ADMITTED_CONTRACTS.range),`${a.version} outside ${pin.ADMITTED_CONTRACTS.range}`);
  assert.equal(brush.version,JSON.parse(readFileSync(new URL('../package.json',entry))).version);
  const service=new brush.BrushV3();
- assert.equal(service.status().contracts,`${pin.ADMITTED_CONTRACTS.name}@${pin.ADMITTED_CONTRACTS.version}`);
+ assert.equal(service.status().contracts,`${pin.ADMITTED_CONTRACTS.name}@${a.version}`);
  assert.equal(a.checkContractHandshake(service.handshake()).result,'HANDSHAKE_VERSION_MATCH');
- assert.throws(()=>a.checkContractHandshake({...service.handshake(),contracts:'hanaworlds-contracts@0.4.2'}),e=>e.code==='UNSUPPORTED_VERSION');
+ assert.equal(a.checkContractHandshake({...service.handshake(),contracts:'hanaworlds-contracts@0.4.2'}).result,'HANDSHAKE_VERSION_MATCH');
+ assert.throws(()=>a.checkContractHandshake({...service.handshake(),contracts:'hanaworlds-contracts@1.0.0'}),e=>e.code==='UNSUPPORTED_VERSION');
 });
 test('installed current package compiles the unchanged public BUILD path through library/raw/Cordis',()=>{
  const fixture=JSON.parse(readFileSync(new URL(pin.contractsFixtureUrl('main'))));
