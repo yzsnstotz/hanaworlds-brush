@@ -13,7 +13,7 @@ export declare const invariants: readonly string[];
 export declare const contractHandshake: ContractHandshake;
 export declare const hostCapabilities: readonly {readonly limitKind:'COMPILER_EFFECT_CELLS';readonly limit:number;readonly source:string;readonly sourceRevision:string}[];
 export declare class BrushV3 {
- status(): {readonly component:typeof name;readonly version:typeof version;readonly input:'BUILD/V3';readonly output:'operations/v3';readonly contracts:string;readonly worldAccess:'NONE';readonly persistence:'NONE';readonly modelAccess:'NONE';readonly contractHandshake:ContractHandshake;readonly invariants:typeof invariants;readonly hostCapabilities:typeof hostCapabilities;readonly region:{readonly input:'region-build/v1';readonly output:'region-operations/v1';readonly chunkEdge:16};readonly protocolHandshake:ProtocolHandshake};
+ status(): {readonly component:typeof name;readonly version:typeof version;readonly input:'BUILD/V4';readonly output:'operations/v3';readonly contracts:string;readonly worldAccess:'NONE';readonly persistence:'NONE';readonly modelAccess:'NONE';readonly contractHandshake:ContractHandshake;readonly invariants:typeof invariants;readonly hostCapabilities:typeof hostCapabilities;readonly region:{readonly input:'region-build/v1';readonly output:'region-operations/v1';readonly chunkEdge:16};readonly protocolHandshake:ProtocolHandshake};
  handshake(): ContractHandshake;
  compile(request: BuildDocumentRequest): BuildDocumentResponse;
  compileBytes(bytes: Uint8Array): BuildDocumentResponse;
@@ -30,4 +30,4 @@ export declare function compileRegionBuild(request: CompileRegionBuildRequest): 
 export declare function compileRegionBuildBytes(bytes: Uint8Array): CompileRegionBuildResponse;
 export declare const protocolHandshake: ProtocolHandshake;
 export declare const brushProtocols: readonly ProtocolDescriptor[];
-export declare const brushCapabilities: readonly ['BUILD/V3:per-cell-compile','region-build/v1:compile-mapblock-chunks'];
+export declare const brushCapabilities: readonly ['BUILD/V4:per-cell-compile','region-build/v1:compile-mapblock-chunks'];

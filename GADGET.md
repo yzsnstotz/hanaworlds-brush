@@ -23,7 +23,7 @@ Compile order reuses dfbf8e0: strict UTF-8/duplicate keys/pure JSON; complete cu
 BUILD schema; payload/catalogue/frame/world association; exact integer geometry;
 static materials; attributed engine capacity; exact ordered effects; known target
 cells; recomputed coverage/body/hazard witnesses; current domain-separated digest.
-BUILD/V3 requires the supplied localContext world to match request and observed
+BUILD/V4 requires the supplied localContext world to match request and observed
 facts. Brush cannot observe whether a connection/selection remains live; the
 owning runtime checks actual current facts before any write. PLANNED facts refer
 to a preceding build, never the current build.
@@ -75,7 +75,7 @@ union of the emitted chunk boxes; `operationDigest` is the contracts
   it is returned. Failures are typed responses with zero chunks.
 - Compatibility: `protocolHandshake` (`protocol-handshake/v1`) advertises
   `BUILD` major 3 and `region-build` major 1 with capabilities
-  `BUILD/V3:per-cell-compile` and `region-build/v1:compile-mapblock-chunks`.
+  `BUILD/V4:per-cell-compile` and `region-build/v1:compile-mapblock-chunks`.
   Consumers decide with `checkProtocolCompatibility`; package version is
   provenance only. The per-cell `contractHandshake` stays exact-package.
 - Brush does not decide load state, lighting, transactions, snapshots or Undo:

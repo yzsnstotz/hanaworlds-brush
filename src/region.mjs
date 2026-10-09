@@ -23,7 +23,7 @@ export const brushProtocols = Object.freeze(['BUILD', 'region-build'].map(name =
   if (!p) throw new Error(`brush: admitted contracts lack protocol ${name}`);
   return Object.freeze({ protocol: p.protocol, major: p.major, minor: p.minor });
 }));
-export const brushCapabilities = Object.freeze(['BUILD/V3:per-cell-compile', 'region-build/v1:compile-mapblock-chunks']);
+export const brushCapabilities = Object.freeze(['BUILD/V4:per-cell-compile', 'region-build/v1:compile-mapblock-chunks']);
 
 /** Copy the clipped box of the build's VoxelArea-order indices; -1 stays UNSPECIFIED. */
 function clip(build, box) {

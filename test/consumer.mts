@@ -3,7 +3,7 @@ function consume(q:BuildDocumentRequest) {
  const out:BuildDocumentResponse=compileBuildDocument(q);
  const raw:BuildDocumentResponse=compileBuildDocumentBytes(new Uint8Array());
  const service=new BrushV3();service.compile(q);service.compileBytes(new Uint8Array());service.handshake();
- const input:'BUILD/V3'=service.status().input;
+ const input:'BUILD/V4'=service.status().input;
  const output:'operations/v3'=service.status().output;
  expandEffects(q.build.operations,q.build.materials);
  plugin.apply({provide(name,provided){const actual:BrushV3=provided;actual.compile(q);}});
@@ -25,7 +25,7 @@ function consumeRegion(q:CompileRegionBuildRequest) {
  const hs:ProtocolHandshake=service.protocolHandshake();const same:ProtocolHandshake=protocolHandshake;
  const regionInput:'region-build/v1'=service.status().region.input;
  // @ts-expect-error per-cell BUILD wire is not a region request
- compileRegionBuild({...q,contractVersion:'BUILD/V3'});
+ compileRegionBuild({...q,contractVersion:'BUILD/V4'});
  return {out,hs,same,regionInput};
 }
 void consumeRegion;

@@ -1,4 +1,4 @@
-// Pure BUILD/V3 -> operations/v3 compiler. No world connection, no mutation,
+// Pure BUILD/V4 -> operations/v3 compiler. No world connection, no mutation,
 // no persistence, no model access, no clock, no randomness.
 //
 // Every public type, digest and coherence rule comes from the admitted
@@ -14,7 +14,7 @@ import {
 } from '#contracts';
 import { expandEffects, unionBounds } from './expand.mjs';
 
-const WIRE = 'BUILD/V3';
+const WIRE = 'BUILD/V4';
 const OPERATION = 'BuildDocument';
 
 /**

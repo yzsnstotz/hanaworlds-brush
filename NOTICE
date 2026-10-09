@@ -7,7 +7,7 @@ Source: https://github.com/yzsnstotz/hanaworlds-contracts, released tags matchin
 semver ^1.0.0-rc.1 (dependency git+https://github.com/yzsnstotz/hanaworlds-contracts.git#semver:^1.0.0-rc.1;
 the resolved commit is recorded in package-lock.json, not pinned in source)
 License text: node_modules/hanaworlds-contracts/LICENSE and NOTICE.
-Use: BUILD/V3 / operations/v3 and region-build/v1 public types, strict decode,
+Use: BUILD/V4 / operations/v3 and region-build/v1 public types, strict decode,
 geometry, digests, association and witness coherence. The resolved package is
 checked for name, range and file inventory by repack (npm run verify:contracts).
 

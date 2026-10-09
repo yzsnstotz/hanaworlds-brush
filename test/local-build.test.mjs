@@ -10,13 +10,13 @@ const D=(kind,value)=>a.digestValue(kind,value).sha256;
 function request() {
  const r=fixture.request,b=structuredClone(fixture.response.result.build);
  const config={profileVersion:'compilation-config/v2',backendProfileId:'static-local',worldeditRevision:'static-1',nodeWriteSemantics:'explicit-nodeName-param2-static-v2',overlapRule:'last-writer-wins',effectOrder:'numeric-x-y-z',compressionRule:'exact-final-effects-only'};
- return {contractVersion:'BUILD/V3',sessionRef:r.sessionRef,requestId:'brush-current-1',worldRef:r.worldRef,localContext:structuredClone(r.localContext),build:b,buildDigest:D('build',b),catalogue:structuredClone(r.catalogue),catalogueDigest:b.catalogueDigest,targetFacts:structuredClone(r.targetFacts),targetFactsDigest:r.targetFactsDigest,safetyProfile:structuredClone(r.safetyProfile),safetyProfileDigest:r.safetyProfileDigest,compilationConfig:config,compilationConfigDigest:D('compilation-config',config),compilerRevision:'brush-fixture-1'};
+ return {contractVersion:'BUILD/V4',sessionRef:r.sessionRef,requestId:'brush-current-1',worldRef:r.worldRef,localContext:structuredClone(r.localContext),build:b,buildDigest:D('build',b),catalogue:structuredClone(r.catalogue),catalogueDigest:b.catalogueDigest,targetFacts:structuredClone(r.targetFacts),targetFactsDigest:r.targetFactsDigest,safetyProfile:structuredClone(r.safetyProfile),safetyProfileDigest:r.safetyProfileDigest,compilationConfig:config,compilationConfigDigest:D('compilation-config',config),compilerRevision:'brush-fixture-1'};
 }
-test('current BUILD/V3 compiles to exact operations/v3 through the public API',()=>{
+test('current BUILD/V4 compiles to exact operations/v3 through the public API',()=>{
  const q=request(),out=brush.compileBuildDocument(q);
- assert.equal(out.error,null);assert.equal(out.contractVersion,'BUILD/V3');assert.equal(out.result.projection.contractVersion,'operations/v3');
+ assert.equal(out.error,null);assert.equal(out.contractVersion,'BUILD/V4');assert.equal(out.result.projection.contractVersion,'operations/v3');
  assert.deepEqual(JSON.parse(JSON.stringify(out.result.projection.effects)),[{position:[0,1,3],nodeName:'fixture:stone',param2:0}]);
- a.validateBoundResponse('BUILD/V3','BuildDocument',q,out);
+ a.validateBoundResponse('BUILD/V4','BuildDocument',q,out);
 });
 const plain=x=>JSON.parse(JSON.stringify(x));
 function reject(q,code) {const out=brush.compileBuildDocument(q);assert.equal(out.result,null);assert.equal(out.error.code,code);assert.equal(out.error.mutationState,'NONE');}
@@ -43,7 +43,7 @@ test('overlapping inclusive boxes retain exact last-writer effects and numeric o
  for(const w of q.build.witnesses){w.targetFactsDigest=q.targetFactsDigest;w.finalEffectsDigest=finalDigest;w.facts.positions=positions;}
  q.buildDigest=D('build',q.build);
  const out=brush.compileBuildDocument(q);assert.equal(out.error,null);assert.deepEqual(plain(out.result.projection.effects),effects);assert.deepEqual(plain(out.result.writeBounds),q.build.declaredBounds);
- a.validateBoundResponse('BUILD/V3','BuildDocument',q,out);
+ a.validateBoundResponse('BUILD/V4','BuildDocument',q,out);
 });
 test('localContext and observed facts reject a different request world',()=>{
  const q=request();q.localContext.worldRef='different';reject(q,'CURRENT_WORLD_MISMATCH');
@@ -55,10 +55,10 @@ test('payload/frame digests and invalid declared geometry reject with zero opera
  const g=request();g.build.declaredBounds.max[0]=1; // malformed geometry cannot be digest-bound
  const out=brush.compileBuildDocument(g);assert.equal(out.result,null);assert.equal(out.error.code,'SCHEMA_INVALID');
 });
-test('unknown target and overlapping body witness never yield operations',()=>{
+test('unknown target and a body-clearance witness that does not cover the final effects never yield operations',()=>{
  const q=request();q.targetFacts.unknownCells=[{position:[0,1,3],reason:'UNLOADED'}];q.targetFacts.knownEmptyCells=[];q.targetFacts.usableVolume=null;
  rebind(q);reject(q,'TARGET_FACTS_INCOMPLETE');
- const b=request();b.build.witnesses.find(w=>w.predicate==='BODY_CLEARANCE').facts.bodyOccupiedPositions=[[0,1,3]];b.buildDigest=D('build',b.build);reject(b,'SAFETY_INVARIANT_FAILED');
+ const b=request();b.build.witnesses.find(w=>w.predicate==='BODY_CLEARANCE').facts.positions=[]; // contracts 1.0.0: no player geometry in witnesses; real bodies are engine-checkedb.buildDigest=D('build',b.build);reject(b,'SAFETY_INVARIANT_FAILED');
 });
 test('raw duplicate keys and old/authority fields are strictly rejected',()=>{
  const raw=JSON.stringify(request()).replace('"requestId":"brush-current-1"','"requestId":"brush-current-1","requestId":"duplicate"');
@@ -69,7 +69,7 @@ test('raw duplicate keys and old/authority fields are strictly rejected',()=>{
 test('current service advertises exact handshake and no world/persistence/model port',()=>{
  const provided=[];brush.apply({provide:(...args)=>provided.push(args)});assert.equal(provided.length,1);assert.equal(provided[0][0],'hanaworldsBrushV3');
  const service=provided[0][1],status=service.status();assert.equal(brush.BrushV2,undefined);assert.deepEqual(plain(service.handshake()),plain(a.contractHandshake));a.checkContractHandshake(service.handshake());
- assert.equal(status.input,'BUILD/V3');assert.equal(status.output,'operations/v3');assert.equal(status.worldAccess,'NONE');assert.equal(status.persistence,'NONE');assert.equal(status.modelAccess,'NONE');assert.deepEqual(brush.inject,[]);
+ assert.equal(status.input,'BUILD/V4');assert.equal(status.output,'operations/v3');assert.equal(status.worldAccess,'NONE');assert.equal(status.persistence,'NONE');assert.equal(status.modelAccess,'NONE');assert.deepEqual(brush.inject,[]);
  assert.deepEqual(plain(service.compile(request())),plain(brush.compileBuildDocument(request())));
  assert.deepEqual(plain(service.compileBytes(new TextEncoder().encode(JSON.stringify(request())))),plain(service.compile(request())));
 });

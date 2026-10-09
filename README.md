@@ -1,6 +1,6 @@
 # HanaWorlds Brush
 
-Pure deterministic `BUILD/V3` → `operations/v3` per-cell compiler and
+Pure deterministic `BUILD/V4` → `operations/v3` per-cell compiler and
 `region-build/v1` `CompileRegionBuild` → mapblock-aligned `region-operations/v1`
 compiler, packaged as a Cordis plugin providing `hanaworldsBrushV3`. No world
 connection, writes, persistence or model access. Source **0.5.3**, contracts

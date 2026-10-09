@@ -84,18 +84,18 @@ test('cross-mapblock with negative coordinates: ascending mapblock order, chunks
  assert.deepEqual(readback(out),oracle(origin,size,[AIR,DIRT,STONE],indices));
 });
 
-test('per-cell BUILD/V3 path and region path are both advertised; Brush stays pure',()=>{
+test('per-cell BUILD/V4 path and region path are both advertised; Brush stays pure',()=>{
  const s=new brush.BrushV3().status();
- assert.equal(s.input,'BUILD/V3');assert.equal(s.output,'operations/v3');
+ assert.equal(s.input,'BUILD/V4');assert.equal(s.output,'operations/v3');
  assert.equal(s.region.input,'region-build/v1');assert.equal(s.region.output,'region-operations/v1');
  assert.equal(s.worldAccess,'NONE');assert.equal(s.persistence,'NONE');assert.equal(s.modelAccess,'NONE');
  assert.equal(typeof brush.compileBuildDocument,'function');assert.equal(typeof brush.expandEffects,'function');
- assert.deepEqual([...brush.protocolHandshake.capabilities].map(String),['BUILD/V3:per-cell-compile','region-build/v1:compile-mapblock-chunks']);
+ assert.deepEqual([...brush.protocolHandshake.capabilities].map(String),['BUILD/V4:per-cell-compile','region-build/v1:compile-mapblock-chunks']);
 });
 
 test('protocol: same major with other patch/hash is consumable; wrong major, low minor, missing capability, old exact handshake and v2 wire are rejected',()=>{
  // ProtocolRequirements are ordered by protocol (UTF-16 ascending), as the contract schema requires.
- const need=[c.protocolRequirement('BUILD/V3',['BUILD/V3:per-cell-compile']),c.protocolRequirement('region-build/v1',['region-build/v1:compile-mapblock-chunks'])];
+ const need=[c.protocolRequirement('BUILD/V4',['BUILD/V4:per-cell-compile']),c.protocolRequirement('region-build/v1',['region-build/v1:compile-mapblock-chunks'])];
  assert.equal(c.checkProtocolCompatibility(brush.protocolHandshake,need).result,'PROTOCOL_COMPATIBLE');
  assert.equal(new brush.BrushV3().protocolHandshake(),brush.protocolHandshake);
  const otherBuild={...brush.protocolHandshake,provenance:{packageName:'hanaworlds-brush',packageVersion:'0.4.7',sourceRevision:'f'.repeat(40),artifactDigest:'a'.repeat(64)}};

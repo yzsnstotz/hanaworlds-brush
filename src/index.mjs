@@ -1,4 +1,4 @@
-// Pure current BUILD/V3 compiler plus region voxel block compiler. Canvas owns all transaction decisions.
+// Pure current BUILD/V4 compiler plus region voxel block compiler. Canvas owns all transaction decisions.
 import { version as contractsVersion, contractHandshake } from '#contracts';
 import { compileBuildDocument, compileBuildDocumentBytes, hostCapabilities } from './compile.mjs';
 export { compileBuildDocument, compileBuildDocumentBytes, hostCapabilities };
@@ -14,7 +14,7 @@ export const protocolHandshake = Object.freeze({ profileVersion:'protocol-handsh
  capabilities:brushCapabilities, provenance:Object.freeze({ packageName:name, packageVersion:version, sourceRevision:null, artifactDigest:null }) });
 export const invariants = Object.freeze([
  'PURE_COMPILER: no world connection, read/write, persistence, model access, clock or randomness',
- `STRICT_ADMISSION: contracts@${contractsVersion} strict raw UTF-8/duplicate-key/pure JSON and complete BUILD/V3 and region-build/v1 schemas`,
+ `STRICT_ADMISSION: contracts@${contractsVersion} strict raw UTF-8/duplicate-key/pure JSON and complete BUILD/V4 and region-build/v1 schemas`,
  'DIGEST_BINDING: build, catalogue, frame, target facts, safety and compilation config bind their exact payloads',
  'IDENTITY_BINDING: request localContext names its world; observed facts name that world; PLANNED facts name a preceding build',
  'EXACT_GEOMETRY: exact union bounds, last writer wins, one effect per cell, numeric x/y/z order, no rounding or cropping',
@@ -28,7 +28,7 @@ export const invariants = Object.freeze([
  'PROTOCOL_MAJOR: advertised protocol-handshake/v1 lets consumers decide by protocol major + capabilities; package version/hash are provenance only',
 ]);
 export class BrushV3 {
- status() { return Object.freeze({ component:name, version, input:'BUILD/V3', output:'operations/v3',
+ status() { return Object.freeze({ component:name, version, input:'BUILD/V4', output:'operations/v3',
   contracts:`hanaworlds-contracts@${contractsVersion}`, worldAccess:'NONE', persistence:'NONE', modelAccess:'NONE',
   contractHandshake, invariants, hostCapabilities,
   region: { input:'region-build/v1', output:'region-operations/v1', chunkEdge:16 }, protocolHandshake }); }
