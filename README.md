@@ -3,8 +3,8 @@
 Pure deterministic `BUILD/V4` → `operations/v3` per-cell compiler and
 `region-build/v1` `CompileRegionBuild` → mapblock-aligned `region-operations/v1`
 compiler, packaged as a Cordis plugin providing `hanaworldsBrushV3`. No world
-connection, writes, persistence or model access. Source **0.6.0**, contracts
-**`#semver:^2.0.0-rc.1`** (contracts source git released tags, same-major handshake/schema); SOURCE/FIXTURE component only. App, model, world and Undo product gates remain unproven.
+connection, writes, persistence or model access. Source **0.5.3**, contracts
+**`#semver:^1.0.0`** (contracts source git released tags, same-major handshake/schema); SOURCE/FIXTURE component only. App, model, world and Undo product gates remain unproven.
 
 ```sh
 npm ci --ignore-scripts
@@ -26,7 +26,7 @@ for licenses.
 Contracts range: `src/contracts.mjs` is the only place that names the contracts
 dependency (`ADMITTED_CONTRACTS`, a caret range) and the only way tests, preview and
 `verify:contracts` locate it; `package.json` `imports` map `#contracts` to the installed
-`hanaworlds-contracts` dependency `git+https://github.com/yzsnstotz/hanaworlds-contracts.git#semver:^2.0.0-rc.1`
+`hanaworlds-contracts` dependency `git+https://github.com/yzsnstotz/hanaworlds-contracts.git#semver:^1.0.0`
 (no vendored copy, no commit or byte pin; the lock records what npm resolved). `verify:contracts`
 checks that the package Brush actually resolves has the right name, a version inside that range
 (npm caret semantics: 1.x; no prereleases) and exactly its own packed files, and reports its version and

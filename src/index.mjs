@@ -7,7 +7,7 @@ import { compileRegionBuild, compileRegionBuildBytes, brushProtocols, brushCapab
 export { compileRegionBuild, compileRegionBuildBytes, brushProtocols, brushCapabilities };
 export { contractHandshake };
 export const name = 'hanaworlds-brush';
-export const version = '0.6.0';
+export const version = '0.5.3';
 export const serviceName = 'hanaworldsBrushV3';
 /** protocol-handshake/v1: consumers decide compatibility by protocol major + capabilities. */
 export const protocolHandshake = Object.freeze({ profileVersion:'protocol-handshake/v1', component:name, protocols:brushProtocols,

@@ -11,8 +11,7 @@ test('per-cell consumer advertises the installed contracts handshake; same major
  const service=new brush.BrushV3();
  assert.equal(service.status().contracts,`${pin.ADMITTED_CONTRACTS.name}@${a.version}`);
  assert.equal(a.checkContractHandshake(service.handshake()).result,'HANDSHAKE_VERSION_MATCH');
- assert.equal(a.checkContractHandshake({...service.handshake(),contracts:'hanaworlds-contracts@2.0.0'}).result,'HANDSHAKE_VERSION_MATCH');
- assert.throws(()=>a.checkContractHandshake({...service.handshake(),contracts:'hanaworlds-contracts@1.0.0'}),e=>e.code==='UNSUPPORTED_VERSION');
+ assert.equal(a.checkContractHandshake({...service.handshake(),contracts:'hanaworlds-contracts@1.0.0'}).result,'HANDSHAKE_VERSION_MATCH');
  assert.throws(()=>a.checkContractHandshake({...service.handshake(),contracts:'hanaworlds-contracts@0.5.6'}),e=>e.code==='UNSUPPORTED_VERSION');
 });
 test('installed current package compiles the unchanged public BUILD path through library/raw/Cordis',()=>{

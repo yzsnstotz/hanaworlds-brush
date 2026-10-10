@@ -2,9 +2,9 @@ HanaWorlds Brush — Copyright (c) 2026 yzsnstotz
 Owned source: MIT (LICENSE).
 
 Installed runtime dependency (not bundled):
-hanaworlds-contracts ^2.0.0-rc.1 — MIT
+hanaworlds-contracts ^1.0.0 — MIT
 Source: https://github.com/yzsnstotz/hanaworlds-contracts, released tags matching
-semver ^2.0.0-rc.1 (dependency git+https://github.com/yzsnstotz/hanaworlds-contracts.git#semver:^2.0.0-rc.1;
+semver ^1.0.0 (dependency git+https://github.com/yzsnstotz/hanaworlds-contracts.git#semver:^1.0.0;
 the resolved commit is recorded in package-lock.json, not pinned in source)
 License text: node_modules/hanaworlds-contracts/LICENSE and NOTICE.
 Use: BUILD/V4 / operations/v3 and region-build/v1 public types, strict decode,

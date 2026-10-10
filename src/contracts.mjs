@@ -4,7 +4,7 @@
 // Tests, preview and tools/verify-contracts-artifact.mjs locate contracts only through here,
 // so raising the floor is: this range + the package.json dependency, then `npm install`.
 export const ADMITTED_CONTRACTS = Object.freeze({
-  name: 'hanaworlds-contracts', range: '^2.0.0-rc.1',
+  name: 'hanaworlds-contracts', range: '^1.0.0',
   source: 'https://github.com/yzsnstotz/hanaworlds-contracts',
 });
 /** URL of the contracts entry module Brush itself imports as #contracts. */
