@@ -13,5 +13,7 @@
 | BR-06 | 分块边长和空材质来自世界源请求 | 非立方 partition.edge、负坐标与自定义 emptyMaterialRef 经值、字节及服务入口得到同一逐格结果；每块摘要可重算，UNSPECIFIED 保持不写入 | `npm test`（region） | FIXTURE |
 | BR-07 | 世界源字段没有隐式默认 | 缺 partition / emptyMaterialRef、非法 edge 返回 SCHEMA_INVALID、零输出；不支持的 geometryProfile 返回 CAPABILITY_GAP | `npm test`（region） | FIXTURE |
 | BR-08 | 中立能力名及公开类型 | 只声明 compile-partition-chunks；旧 compile-mapblock-chunks 能力请求被拒绝；公开请求类型要求 partition 并暴露 emptyMaterialRef | `npm test`、`npm run typecheck` | SOURCE / FIXTURE |
+| BR-09 | D-18 旧面板移出、正常打包自包含消费 | 仓内无旧归档；正常 npm pack 无 archive/preview/tools/test，独立安装后执行原四组公开消费测试、合约包校验和公开类型检查 | `npm test`（package） | PACK / FIXTURE / SOURCE |
+| BR-10 | D-14 合法移植源和几何保持 | 包含钉住的 Lua、source.json、AGPL 许可和 NOTICE；117 个上游 oracle 用例及编译遍历在源码和独立安装包上通过 | `npm test`（shapes / package） | SOURCE / FIXTURE |
 
-本表只记录模块 SOURCE / FIXTURE 证据，不代表整合、真实世界或 UI 验收。
+本表只记录模块 SOURCE / FIXTURE / PACK 证据，不代表整合、真实世界或 UI 验收。
