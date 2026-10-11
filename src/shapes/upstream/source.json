@@ -1,0 +1,18 @@
+{
+  "name": "Minetest-WorldEdit",
+  "commit": "62ffafe3bcb386600c431ef3840d91c3c8f85639",
+  "license": "AGPL-3.0-only",
+  "source": "https://github.com/Uberi/Minetest-WorldEdit/tree/62ffafe3bcb386600c431ef3840d91c3c8f85639",
+  "sha256": {
+    "LICENSE.AGPLv3.txt": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0",
+    "LICENSE.txt": "da0f756489d6952769a01246312d00b3f462d5e461b347141307237bab33fc3e",
+    "common.lua": "48476323b6fadf1a6128318ff029738493984adb423302748695d878e3f96438",
+    "primitives.lua": "4e9de016fd36a2351e73080fbd2f2aaea96b2cd6183d0073db08ec75c9308f65"
+  },
+  "upstreamPaths": {
+    "primitives.lua": "worldedit/primitives.lua",
+    "common.lua": "worldedit/common.lua",
+    "LICENSE.txt": "LICENSE.txt",
+    "LICENSE.AGPLv3.txt": "LICENSE.AGPLv3.txt"
+  }
+}

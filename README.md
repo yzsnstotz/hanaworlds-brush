@@ -12,8 +12,10 @@ npm run verify:contracts && npm test
 npm run build && npm run typecheck
 ```
 
-`npm test` includes local BUILD, image consumption and region tests. Materials and orientations remain opaque. Only voxel-grid/v1 is supported; other geometry profiles return CAPABILITY_GAP. Partition edge and emptyMaterialRef come from the request. Each chunk carries `digestValue('region-block', chunk.block).sha256`; the SDK validates the compiled result.
+`npm test` includes local BUILD, image consumption, region and pinned shape-oracle tests. Materials and orientations remain opaque. Only voxel-grid/v1 is supported; other geometry profiles return CAPABILITY_GAP. Partition edge and emptyMaterialRef come from the request. Each chunk carries `digestValue('region-block', chunk.block).sha256`; the SDK validates the compiled result.
 
-The compile/expand/region implementations reuse main e6dbace25f02cee338a643f9607c5cec0ff2e513. D-18 preview and historical tests/tooling are preserved with source references and byte hashes in [archive/brush-01](archive/brush-01/README.md), outside the distributed package and current tests.
+The compile and region implementations reuse main e6dbace25f02cee338a643f9607c5cec0ff2e513; final box expansion now uses the D-14 port below. D-18 preview and historical tests/tooling are preserved with source references and byte hashes in [archive/brush-01](archive/brush-01/README.md), outside the distributed package and current tests.
+
+D-14 geometry is ported from Minetest-WorldEdit revision `62ffafe3` into [src/shapes](src/shapes/README.md). The BUILD compiler uses its inclusive cuboid traversal; sphere, dome, cylinder/cone, pyramid and spiral remain internal primitives within the current published contract. The vendored source is AGPL-3.0-only, with original source hashes and license text included.
 
 See [GADGET.md](GADGET.md) and [NOTICE](NOTICE). SOURCE/FIXTURE/PACK evidence does not establish product/world/UI acceptance.
