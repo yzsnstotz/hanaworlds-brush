@@ -57,10 +57,13 @@ export function smokeInputs(entries) {
  return {build:q,region,customRegion:custom,customExpected:expected,entries};
 }
 function installedResolutionGraph(candidate,consumer) {
+ // macOS /var temp paths resolve through /private/var. Compare both sides as
+ // real paths while still rejecting any module outside this consumer's install.
+ const installedRoot=realpathSync(join(consumer,'node_modules'));
  const graph={},queue=candidate.audit.entries.map(e=>realpathSync(join(consumer,'node_modules/hanaworlds-brush',e.file)));
  while(queue.length) {
   const file=queue.shift();if(graph[file])continue;
-  assert.ok(file.startsWith(join(consumer,'node_modules')+'/'),'production resolved outside isolated install: '+file);
+  assert.ok(file.startsWith(installedRoot+'/'),'production resolved outside isolated install: '+file);
   const bytes=readFileSync(file),refs=[];
   if(/\.(?:mjs|cjs|js)$/.test(file)) {
    const ast=parse(bytes.toString(),{ecmaVersion:'latest',sourceType:'module'});

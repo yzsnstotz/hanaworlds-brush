@@ -101,13 +101,14 @@ test('strictDepBuilds actually rejects a dependency with an unapproved install s
  const log=String(error.stdout??'')+String(error.stderr??'');writeFileSync(join(consumer,'install-failed.log'),log);
  assert.match(log,/ERR_PNPM_IGNORED_BUILDS|unreviewed|not.*approved|not.*allowed.*build/is);
 });
-for(const name of ['missing-sdk','wrong-dev-source','wrong-lock-source','edited-sdk'])test('development supply validation actually rejects '+name,()=>{
+for(const name of ['missing-sdk','wrong-dev-source','wrong-lock-source','edited-sdk','extra-sdk-file'])test('development supply validation actually rejects '+name,()=>{
  const dev=join(out,name);mkdirSync(join(dev,'tools'),{recursive:true});
  for(const f of ['package.json','package-lock.json','tools/development-contracts.mjs','tools/verify-contracts-artifact.mjs'])cpSync(join(root,f),join(dev,f));
  if(name!=='missing-sdk')cpSync(join(root,'node_modules/hanaworlds-contracts'),join(dev,'node_modules/hanaworlds-contracts'),{recursive:true});
  if(name==='wrong-dev-source')manifest(dev,p=>p.devDependencies['hanaworlds-contracts']=p.devDependencies['hanaworlds-contracts'].replace('v2.2.1','v2.2.0'));
  if(name==='wrong-lock-source'){const path=join(dev,'package-lock.json'),lock=JSON.parse(readFileSync(path));lock.packages['node_modules/hanaworlds-contracts'].resolved=lock.packages['node_modules/hanaworlds-contracts'].resolved.replace('github.com/yzsnstotz','github.com/wrong-provider');writeFileSync(path,JSON.stringify(lock));}
  if(name==='edited-sdk'){const f=join(dev,'node_modules/hanaworlds-contracts/dist/local/index.mjs');writeFileSync(f,readFileSync(f,'utf8')+'\n// deliberately edited SDK\n');}
+ if(name==='extra-sdk-file')writeFileSync(join(dev,'node_modules/hanaworlds-contracts/dist/local/injected.mjs'),'export const injected = true;\n');
  let error;try{run(process.execPath,[join(dev,'tools/verify-contracts-artifact.mjs'),dev]);}catch(e){error=e;}
  assert.ok(error,'bad development supply must fail');
  const log=String(error.stdout??'')+String(error.stderr??'');writeFileSync(join(dev,'verify-failed.log'),log);

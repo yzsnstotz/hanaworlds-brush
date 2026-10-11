@@ -33,22 +33,27 @@ try {
   const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
   const [packed] = JSON.parse(execFileSync(npm, ['pack', pkgDir, '--pack-destination', out, '--json'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'inherit'] }));
   const sha256 = createHash('sha256').update(readFileSync(join(out, packed.filename))).digest('hex');
-  // Admitted from a fresh locked install of the immutable published tag.
-  // Comparing a repack only to its own input would miss an edited SDK.
-  const expectedSha256 = '80c4c8e7a3ea42470e3d7514b2c0966adcd84c39b03676362e45dc98c3c0ca3a';
+  // All 39 release paths and byte hashes admitted from the fresh locked v2.2.1 install.
+  // This equals the original build-provenance sdkFilesSha256. npm/Node gzip encoders
+  // can produce different compressed bytes for the very same tar; admission must
+  // pin release contents, rather than compressor output or a self-comparison.
+  const expectedSdkFilesSha256 = 'd6bc03848d95ea94ba07b0cbe05bd67f1031aca84a7ce0c154e41238324199b6';
   const extract = join(out, 'x');
   mkdirSync(extract);
   execFileSync('tar', ['-xzf', join(out, packed.filename), '-C', extract]);
   const packedFiles = listFiles(join(extract, 'package'));
+  const sdkFiles = Object.fromEntries(packedFiles.map(f => [f,
+    createHash('sha256').update(readFileSync(join(extract, 'package', f))).digest('hex')]));
+  const sdkFilesSha256 = createHash('sha256').update(JSON.stringify(sdkFiles)).digest('hex');
   const presentFiles = listFiles(pkgDir);
   const mismatched = packedFiles.filter(f => !readFileSync(join(extract, 'package', f)).equals(readFileSync(join(pkgDir, f))));
   const extra = presentFiles.filter(f => !packedFiles.includes(f));
   const report = {
     admitted: ADMITTED_CONTRACTS, brushRoot, declared, lockResolved, lockMatchesRelease, checkedDir: pkgDir, name: pkg.name, version: pkg.version,
-    repackSha256: sha256, expectedSha256, entries: packed.entryCount, mismatchedFiles: mismatched, extraFiles: extra,
+    repackSha256: sha256, sdkFilesSha256, expectedSdkFilesSha256, entries: packed.entryCount, mismatchedFiles: mismatched, extraFiles: extra,
     declaredIsReleaseTag: declared === ADMITTED_CONTRACTS.dependency,
     versionIsRelease: pkg.version === ADMITTED_CONTRACTS.version,
-    match: lockMatchesRelease && sha256 === expectedSha256 && declared === ADMITTED_CONTRACTS.dependency && pkg.name === ADMITTED_CONTRACTS.name &&
+    match: lockMatchesRelease && sdkFilesSha256 === expectedSdkFilesSha256 && declared === ADMITTED_CONTRACTS.dependency && pkg.name === ADMITTED_CONTRACTS.name &&
       pkg.version === ADMITTED_CONTRACTS.version && mismatched.length === 0 && extra.length === 0,
   };
   console.log(JSON.stringify(report, null, 2));

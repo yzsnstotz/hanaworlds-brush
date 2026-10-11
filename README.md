@@ -2,7 +2,7 @@
 
 Pure deterministic BUILD/V5 → operations/v4 and region-build/v2 → region-operations/v2 compiler, providing `hanaworldsBrushV3`. No world connection, mutation, persistence or model access. Package identity is read from package.json.
 
-Development-only contracts: `git+https://github.com/yzsnstotz/hanaworlds-contracts.git#v2.2.1`. The lock records the released commit. `npm run verify:contracts` checks the exact release, package inventory, immutable packed SHA-256 and bytes; protocol compatibility uses SDK protocol major/minor and capabilities.
+Development-only contracts: `git+https://github.com/yzsnstotz/hanaworlds-contracts.git#v2.2.1`. The lock records the released commit. `npm run verify:contracts` checks the exact release and the pinned SHA-256 of the sorted release file-path/byte-hash inventory, then compares normal pack contents against the installed SDK. The tgz SHA-256 is recorded as evidence; gzip encoding differences between npm/Node versions do not change release identity. Protocol compatibility uses SDK protocol major/minor and capabilities.
 
 Repository checks use the shared user npm cache `${HOME}/.npm`, set in the local `.npmrc`. This keeps the standard commands independent of a volume-specific user cache setting; no environment prefix is required.
 

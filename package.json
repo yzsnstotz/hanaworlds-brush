@@ -37,7 +37,7 @@
   },
   "scripts": {
     "build": "npm run verify:contracts && node tools/build.mjs && npm run test:package-boundary",
-    "test": "npm run verify:contracts && node tools/build.mjs && node --test test/local-build.test.mjs test/region.test.mjs test/image-contracts.test.mjs test/shapes.test.mjs test/package.test.mjs && npm run test:package-boundary",
+    "test": "npm run verify:contracts && node tools/build.mjs && node --test test/development-supply.test.mjs test/local-build.test.mjs test/region.test.mjs test/image-contracts.test.mjs test/shapes.test.mjs test/package.test.mjs && npm run test:package-boundary",
     "verify:contracts": "node tools/verify-contracts-artifact.mjs",
     "pack:artifact": "npm pack --pack-destination artifacts --json",
     "typecheck": "tsc --noEmit --strict --module nodenext --moduleResolution nodenext --target es2022 test/consumer.mts",
