@@ -3,7 +3,7 @@
   "version": "0.6.0",
   "private": true,
   "type": "module",
-  "license": "MIT",
+  "license": "MIT AND AGPL-3.0-only",
   "description": "Pure deterministic BUILD/V5 and region-build/v2 compiler; contracts v2.2.1, no world mutation",
   "repository": {
     "type": "git",
@@ -39,8 +39,8 @@
     }
   },
   "scripts": {
-    "build": "node --check src/index.mjs && node --check src/compile.mjs && node --check src/expand.mjs && node --check src/region.mjs && node --check src/contracts.mjs && node --check src/admit.mjs",
-    "test": "node --test test/local-build.test.mjs test/region.test.mjs test/image-contracts.test.mjs",
+    "build": "node --check src/index.mjs && node --check src/compile.mjs && node --check src/expand.mjs && node --check src/region.mjs && node --check src/contracts.mjs && node --check src/admit.mjs && node --check src/shapes/index.mjs",
+    "test": "node --test test/local-build.test.mjs test/region.test.mjs test/image-contracts.test.mjs test/shapes.test.mjs",
     "verify:contracts": "node tools/verify-contracts-artifact.mjs",
     "pack:artifact": "npm pack --ignore-scripts --pack-destination artifacts --json",
     "typecheck": "tsc --noEmit --strict --module nodenext --moduleResolution nodenext --target es2022 test/consumer.mts"

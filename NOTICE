@@ -20,8 +20,17 @@ Development-only dependency: TypeScript 5.8.3 — Apache-2.0
 Source: https://github.com/microsoft/TypeScript
 Use: public root declaration verification; not shipped.
 
-WorldEdit runtime is not bundled. Brush has no world writes.
-D-14 shape algorithm port is assigned to brush-02, separate from this migration.
-Approved upstream: Minetest-WorldEdit · pinned source 62ffafe3 · AGPL-3.0
-Source: https://github.com/Uberi/Minetest-WorldEdit/tree/62ffafe3
-Intended use: port geometry primitives into src/shapes; no such port is claimed here.
+Vendored geometry algorithms (D-14):
+Minetest-WorldEdit · version/commit 62ffafe3bcb386600c431ef3840d91c3c8f85639
+(pinned abbreviated revision 62ffafe3) · AGPL-3.0 (version 3 only).
+Source: https://github.com/Uberi/Minetest-WorldEdit/tree/62ffafe3bcb386600c431ef3840d91c3c8f85639
+Copyright © 2012 sfan5, Anthony Zhang (Uberi/Temperest), Brett O'Donnell (cornernote).
+Use: src/shapes/index.mjs ports cube/cuboid, sphere, dome, cylinder/cone,
+pyramid and spiral cell geometry. The BUILD compiler uses the cuboid traversal
+for final slab writes; material references and orientations remain opaque.
+Unmodified references: src/shapes/upstream/primitives.lua and common.lua;
+source paths and byte hashes: src/shapes/upstream/source.json.
+License and attribution: src/shapes/upstream/LICENSE.AGPLv3.txt and LICENSE.txt.
+Adaptation: Lua/VoxelArea indices become pure JavaScript position generators;
+engine reads/writes and historical argument compatibility are omitted.
+D-14 is a source port. WorldEdit runtime is not bundled (D-15 is separate).

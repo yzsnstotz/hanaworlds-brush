@@ -6,6 +6,8 @@
 // coordinate slabs so that empty space between distant boxes is never visited,
 // and it emits effects already in final order (no global sort or cell map).
 
+import { cuboid } from './shapes/index.mjs';
+
 /** Sorted unique slab cuts for one axis: every box min and max+1. */
 function cutsFor(operations, axis) {
   const cuts = new Set();
@@ -62,7 +64,7 @@ export function expandEffects(operations, materials) {
           for (let zi = 0; zi < winners.length; zi++) {
             const spec = winners[zi];
             if (spec === null) continue;
-            for (let z = zs[zi]; z < zs[zi + 1]; z++) effects.push({ geometryProfile: 'voxel-grid/v1', position: [x, y, z], materialRef: spec.materialRef, orientation: spec.orientation });
+            for (const position of cuboid([x, y, zs[zi]], [x, y, zs[zi + 1] - 1])) effects.push({ geometryProfile: 'voxel-grid/v1', position, materialRef: spec.materialRef, orientation: spec.orientation });
           }
         }
       }
