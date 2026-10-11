@@ -77,7 +77,7 @@ test('a nested resolvable SDK package cannot be distributed',()=>{
 test('actual strict pnpm install rejects the old transitive git SDK dependency',()=>{
  const bad=negative('exotic-runtime',dir=>manifest(dir,p=>p.dependencies['hanaworlds-contracts']=p.devDependencies['hanaworlds-contracts']));
  const consumer=join(out,'exotic-production');mkdirSync(consumer);writeFileSync(join(consumer,'package.json'),JSON.stringify({private:true,dependencies:{'hanaworlds-brush':'file:'+bad.tgz}}));
- let error;try{run(process.execPath,[pnpm,'install','--prod','--reporter=append-only'],{cwd:consumer,env:cleanEnv(consumer)});}catch(e){error=e;}
+ let error;try{run(process.execPath,[pnpm,'install','--prod','--reporter=append-only','--store-dir',join(process.env.HOME,'.local/share/pnpm/store')],{cwd:consumer,env:cleanEnv(consumer)});}catch(e){error=e;}
  assert.ok(error,'pnpm must reject transitive git');
  const log=String(error.stdout??'')+String(error.stderr??'');writeFileSync(join(consumer,'install-failed.log'),log);
  assert.match(log,/ERR_PNPM.*EXOTIC|exotic.*subdepend|not.*allowed.*git/is);
