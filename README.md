@@ -4,6 +4,8 @@ Pure deterministic BUILD/V5 → operations/v4 and region-build/v2 → region-ope
 
 Contracts: `git+https://github.com/yzsnstotz/hanaworlds-contracts.git#v2.2.1`. The lock records the released commit. `npm run verify:contracts` checks the exact release, package inventory and bytes; protocol compatibility uses SDK protocol major/minor and capabilities.
 
+Repository checks use the shared user npm cache `${HOME}/.npm`, set in the local `.npmrc`. This keeps the standard commands independent of a volume-specific user cache setting; no environment prefix is required.
+
 With Node >=24.13.1 <25:
 
 ```sh
