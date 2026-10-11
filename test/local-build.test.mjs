@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-const entry=import.meta.resolve(process.env.BRUSH_UNDER_TEST ?? '../src/index.mjs');
+const entry=import.meta.resolve(process.env.BRUSH_UNDER_TEST ?? '../dist/index.mjs');
 const brush=await import(entry);
-const pin=await import(new URL('./contracts.mjs',entry));
+const pin=await import('../tools/development-contracts.mjs');
 const a=await import(pin.contractsUrl);
 const fixture=JSON.parse(readFileSync(new URL(pin.contractsFixtureUrl('main'))));
 const D=(kind,value)=>a.digestValue(kind,value).sha256;
@@ -89,7 +89,7 @@ test('current service advertises exact handshake and no world/persistence/model 
 });
 test('rejected accessor/proxy input never executes caller-controlled getters or traps',()=>{
  let reads=0;const q=request();Object.defineProperty(q,'requestId',{enumerable:true,get(){reads++;return 'unsafe';}});
- assert.throws(()=>brush.compileBuildDocument(q),e=>e instanceof a.ContractError);assert.equal(reads,0);
+ assert.throws(()=>brush.compileBuildDocument(q),e=>e.code==='SCHEMA_INVALID' && e.publicError?.mutationState==='NONE');assert.equal(reads,0);
  const proxy=new Proxy(request(),{getOwnPropertyDescriptor(){reads++;return undefined;},get(){reads++;return 'unsafe';}});
- assert.throws(()=>brush.compileBuildDocument(proxy),e=>e instanceof a.ContractError);assert.equal(reads,0);
+ assert.throws(()=>brush.compileBuildDocument(proxy),e=>e.code==='SCHEMA_INVALID' && e.publicError?.mutationState==='NONE');assert.equal(reads,0);
 });

@@ -14,7 +14,7 @@ import {
   ContractError, decodeRawJSON, validateResponse, digestValue, contractProtocols,
   validateCompileRegionBuildRequest, validateCompiledRegionSet,
   expandRegionBlock, encodeRegionBlock, regionChunksOfBox,
-} from '#contracts';
+} from './contracts.mjs';
 import { requestIdOf, requireSupportedProfiles } from './admit.mjs';
 
 const WIRE = 'region-build/v2';

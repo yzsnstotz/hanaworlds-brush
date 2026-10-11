@@ -3,7 +3,7 @@
 // code (no getters, no proxy traps).
 
 import { types as nodeTypes } from 'node:util';
-import { ContractError } from '#contracts';
+import { ContractError } from './contracts.mjs';
 
 /**
  * Geometry profiles this compiler can expand. A payload naming any other

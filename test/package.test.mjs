@@ -1,59 +1,35 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
-import { createHash } from 'node:crypto';
-import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
+import { normalPack, installAndSmoke, root, run } from '../tools/package-harness.mjs';
+import { ADMITTED_CONTRACTS } from '../tools/development-contracts.mjs';
+import { sha256 } from '../tools/artifact-boundary.mjs';
 
-const root = fileURLToPath(new URL('..', import.meta.url));
-const suites = ['local-build', 'region', 'image-contracts', 'shapes'].map(name => join(root, `test/${name}.test.mjs`));
-const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
-const run = (command, args, options = {}) => execFileSync(command, args, {
-  cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], ...options,
-});
-
-test('normal npm pack consumes published APIs without D-18 panels and preserves D-14 geometry/source/license', () => {
-  assert.equal(existsSync(join(root, 'archive/brush-01')), false, 'D-18 archive must live outside the repository');
-  const out = mkdtempSync(join(process.env.BRUSH_VERIFY_TMP ?? tmpdir(), 'brush-package-'));
-  try {
-    // Deliberately use normal pack: no --ignore-scripts or custom file filter.
-    const [packed] = JSON.parse(run(npm, ['pack', '--pack-destination', out, '--json']));
-    const files = packed.files.map(file => file.path);
-    assert.ok(files.length > 0);
-    for (const path of files) assert.doesNotMatch(path, /^(?:archive|preview|tools|test)\//, path);
-    for (const path of ['NOTICE', 'types/index.d.mts', 'src/shapes/index.mjs', 'src/shapes/upstream/source.json',
-      'src/shapes/upstream/primitives.lua', 'src/shapes/upstream/common.lua',
-      'src/shapes/upstream/LICENSE.txt', 'src/shapes/upstream/LICENSE.AGPLv3.txt']) assert.ok(files.includes(path), path);
-
-    const consumer = join(out, 'consumer');
-    mkdirSync(consumer);
-    writeFileSync(join(consumer, 'package.json'), JSON.stringify({ name: 'brush-packed-consumer', private: true, type: 'module' }));
-    run(npm, ['install', '--ignore-scripts', '--no-audit', '--no-fund', '--package-lock=false', join(out, packed.filename)], { cwd: consumer });
-    // Resolve the package root from a real external consumer, through exports.
-    const entry = run(process.execPath, ['--input-type=module', '-e', "console.log(import.meta.resolve('hanaworlds-brush'))"], { cwd: consumer }).trim();
-    const installed = dirname(dirname(fileURLToPath(entry)));
-    for (const path of files) assert.deepEqual(readFileSync(join(installed, path)), readFileSync(join(root, path)), path);
-    const env = { ...process.env, BRUSH_UNDER_TEST: entry };
-    delete env.NODE_TEST_CONTEXT;
-    const installedOutput = run(process.execPath, ['--test', '--test-reporter=tap', ...suites], { cwd: consumer, env });
-    assert.match(installedOutput, /# fail 0\b/);
-    const installedTests = Number(installedOutput.match(/# tests (\d+)/)?.[1]);
-    assert.ok(installedTests > 0, 'the installed suites must actually execute tests');
-    run(process.execPath, [join(root, 'tools/verify-contracts-artifact.mjs'), installed], { cwd: consumer });
-    writeFileSync(join(consumer, 'consumer.mts'), readFileSync(join(root, 'test/consumer.mts')));
-    run(process.execPath, [join(root, 'node_modules/typescript/bin/tsc'), '--noEmit', '--strict', '--module', 'nodenext',
-      '--moduleResolution', 'nodenext', '--target', 'es2022', join(consumer, 'consumer.mts')], { cwd: consumer });
-    console.log(JSON.stringify({ evidence: 'PACK/FIXTURE', entries: packed.entryCount,
-      sha256: createHash('sha256').update(readFileSync(join(out, packed.filename))).digest('hex'),
-      installedSuites: suites.length, installedTests, publicConsumerTypes: 'PASS', worldAccess: 'NONE' }));
-  } catch (error) {
-    // Preserve the actual child failure in the gate output; never retry it.
-    if (error.stdout) process.stderr.write(error.stdout);
-    if (error.stderr) process.stderr.write(error.stderr);
-    throw error;
-  } finally {
-    rmSync(out, { recursive: true, force: true });
-  }
+test('normal npm pack preserves every geometry/fixture/safety/type consumer gate and legal source',async()=>{
+ assert.equal(existsSync(join(root,'archive/brush-01')),false,'D-18 archive remains outside repository');
+ const out=mkdtempSync(join(process.env.BRUSH_VERIFY_TMP??tmpdir(),'brush-package-'));
+ const candidate=normalPack(join(out,'pack'));
+ const files=candidate.packed.files.map(f=>f.path);
+ for(const f of files)assert.doesNotMatch(f,/^(?:archive|preview|tools|test|src)\//);
+ for(const f of ['NOTICE','types/index.d.mts','dist/shapes/index.mjs','dist/shapes/upstream/source.json',
+ 'dist/shapes/upstream/primitives.lua','dist/shapes/upstream/common.lua','dist/shapes/upstream/LICENSE.txt',
+ 'dist/shapes/upstream/LICENSE.AGPLv3.txt','licenses/hanaworlds-contracts.LICENSE','licenses/hanaworlds-contracts.NOTICE'])assert.ok(files.includes(f),f);
+ const {consumer,env}=await installAndSmoke(candidate,join(out,'production'));
+ const installed=join(consumer,'node_modules/hanaworlds-brush');
+ for(const f of files)assert.deepEqual(readFileSync(join(installed,f)),readFileSync(join(root,f)),f);
+ const entry=run(process.execPath,['--input-type=module','-e',"console.log(import.meta.resolve('hanaworlds-brush'))"],{cwd:consumer,env}).trim();
+ const suites=['local-build','region','image-contracts','shapes'].map(n=>join(root,`test/${n}.test.mjs`));
+ const fixtureEnv={...process.env,BRUSH_UNDER_TEST:entry};delete fixtureEnv.NODE_TEST_CONTEXT;
+ const output=run(process.execPath,['--test','--test-reporter=tap',...suites],{cwd:consumer,env:fixtureEnv});
+ writeFileSync(join(out,'installed-fixture-suites.log'),output);assert.match(output,/# fail 0\b/);
+ const tests=Number(output.match(/# tests (\d+)/)?.[1]);assert.ok(tests>0);
+ // Public declarations use a development type supplier in a separate consumer.
+ const types=join(out,'types-consumer');mkdirSync(types);
+ writeFileSync(join(types,'package.json'),JSON.stringify({private:true,type:'module',dependencies:{'hanaworlds-brush':'file:'+candidate.tgz},devDependencies:{'hanaworlds-contracts':ADMITTED_CONTRACTS.dependency,typescript:'5.8.3'}}));
+ run('npm',['install','--no-audit','--no-fund'],{cwd:types});
+ writeFileSync(join(types,'consumer.mts'),readFileSync(join(root,'test/consumer.mts')));
+ run(process.execPath,[join(types,'node_modules/typescript/bin/tsc'),'--noEmit','--strict','--module','nodenext','--moduleResolution','nodenext','--target','es2022',join(types,'consumer.mts')],{cwd:types});
+ console.log(JSON.stringify({evidence:'PACK/PRODUCTION + INDEPENDENT_DEV_FIXTURE/TYPES',directory:out,sha256:sha256(readFileSync(candidate.tgz)),installedSuites:suites.length,installedTests:tests,publicConsumerTypes:'PASS',worldAccess:'NONE'}));
 });

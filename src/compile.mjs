@@ -10,7 +10,7 @@ import {
   ContractError, validateBoundRequest, digestValue, validateFactsCoverage,
   validateStaticMaterials, validateWitnessCoherence, unionCellCount, comparePosition,
   validateResponse, decodeRawJSON,
-} from '#contracts';
+} from './contracts.mjs';
 import { expandEffects, unionBounds } from './expand.mjs';
 import { requestIdOf, requireSupportedProfiles } from './admit.mjs';
 

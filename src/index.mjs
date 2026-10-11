@@ -1,5 +1,5 @@
 // Pure current BUILD/V5 compiler plus region voxel block compiler. Canvas owns all transaction decisions.
-import { version as contractsVersion, contractHandshake } from '#contracts';
+import { version as contractsVersion, contractHandshake } from './contracts.mjs';
 import pkg from '../package.json' with { type: 'json' };
 import { geometryProfiles } from './admit.mjs';
 import { compileBuildDocument, compileBuildDocumentBytes, hostCapabilities } from './compile.mjs';

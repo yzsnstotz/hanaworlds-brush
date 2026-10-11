@@ -6,9 +6,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-const entry=import.meta.resolve(process.env.BRUSH_UNDER_TEST ?? '../src/index.mjs');
+const entry=import.meta.resolve(process.env.BRUSH_UNDER_TEST ?? '../dist/index.mjs');
 const brush=await import(entry);
-const pin=await import(new URL('./contracts.mjs',entry));
+const pin=await import('../tools/development-contracts.mjs');
 const c=await import(pin.contractsUrl);
 const fixture=JSON.parse(readFileSync(new URL(pin.contractsFixtureUrl('brush-placement')))).region;
 const WIRE='region-build/v2';

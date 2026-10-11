@@ -1,14 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-const entry=import.meta.resolve(process.env.BRUSH_UNDER_TEST ?? '../src/index.mjs');
+const entry=import.meta.resolve(process.env.BRUSH_UNDER_TEST ?? '../dist/index.mjs');
 const brush=await import(entry);
-const pin=await import(new URL('./contracts.mjs',entry));
+const pin=await import('../tools/development-contracts.mjs');
 const a=await import(pin.contractsUrl);
 test('per-cell consumer advertises the installed contracts handshake; same major accepted, other major refused',()=>{
  assert.equal(a.version,pin.ADMITTED_CONTRACTS.version);
  const own=JSON.parse(readFileSync(new URL('../package.json',entry)));
- assert.equal(own.dependencies[pin.ADMITTED_CONTRACTS.name],pin.ADMITTED_CONTRACTS.dependency);
+ assert.equal(own.devDependencies[pin.ADMITTED_CONTRACTS.name],pin.ADMITTED_CONTRACTS.dependency);
  assert.match(pin.ADMITTED_CONTRACTS.dependency,/^git\+https:\/\/github\.com\/yzsnstotz\/hanaworlds-contracts\.git#v\d+\.\d+\.\d+$/);
  assert.equal(brush.version,JSON.parse(readFileSync(new URL('../package.json',entry))).version);
  const service=new brush.BrushV3();
@@ -37,7 +37,7 @@ test('installed current package compiles the public BUILD/V5 path through librar
 test('version identity is read from package.json, and src names no engine literal (chunk edge, empty material, node or param2)',()=>{
  assert.equal(brush.version,JSON.parse(readFileSync(new URL('../package.json',entry))).version);
  for(const f of ['index.mjs','compile.mjs','expand.mjs','region.mjs','admit.mjs','contracts.mjs']){
-  const src=readFileSync(new URL(f,entry),'utf8');
+  const src=readFileSync(f==='contracts.mjs'?new URL('../src/contracts.mjs',import.meta.url):new URL(f,entry),'utf8');
   for(const re of [/\bair\b/,/mapblock/i,/nodeName/,/param2/,/chunkEdge/,/\b16\b/,/luanti/i,/worldedit/i]) assert.doesNotMatch(src,re,`${f} names ${re}`);
  }
 });

@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
-const entry = import.meta.resolve(process.env.BRUSH_UNDER_TEST ?? '../src/index.mjs');
+const entry = import.meta.resolve(process.env.BRUSH_UNDER_TEST ?? '../dist/index.mjs');
 const shapesUrl = new URL('./shapes/index.mjs', entry);
 const shapes = await import(shapesUrl).catch(error => {
   if (error.code === 'ERR_MODULE_NOT_FOUND') return {};
