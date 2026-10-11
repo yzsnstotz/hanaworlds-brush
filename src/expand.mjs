@@ -1,6 +1,6 @@
 // Exact expansion of ordered inclusive set_box operations into final effects.
 //
-// Semantics are the frozen BUILD/V3 + compilation-config/v2 rules:
+// Semantics are the BUILD/V5 + compilation-config/v3 rules:
 // last-writer-wins on overlap, one effect per written cell, numeric x,y,z order,
 // no compression, no rounding, no truncation. The sweep below works on
 // coordinate slabs so that empty space between distant boxes is never visited,
@@ -24,9 +24,10 @@ export function unionBounds(operations) {
 }
 
 /**
- * Expand ordered set_box writes. `materials` maps materialRef to NodeSpec and
- * must already be validated to contain every referenced materialRef.
- * Returns effects ordered by numeric x, then y, then z.
+ * Expand ordered set_box writes. `materials` maps an operation materialRef key to
+ * its MaterialSpec {materialRef, orientation} and must already be validated to
+ * contain every referenced key. Returns voxel-grid/v1 effects ordered by numeric
+ * x, then y, then z; materialRef and orientation are copied unchanged (opaque).
  */
 export function expandEffects(operations, materials) {
   const xs = cutsFor(operations, 0), ys = cutsFor(operations, 1), zs = cutsFor(operations, 2);
@@ -61,7 +62,7 @@ export function expandEffects(operations, materials) {
           for (let zi = 0; zi < winners.length; zi++) {
             const spec = winners[zi];
             if (spec === null) continue;
-            for (let z = zs[zi]; z < zs[zi + 1]; z++) effects.push({ position: [x, y, z], nodeName: spec.nodeName, param2: spec.param2 });
+            for (let z = zs[zi]; z < zs[zi + 1]; z++) effects.push({ geometryProfile: 'voxel-grid/v1', position: [x, y, z], materialRef: spec.materialRef, orientation: spec.orientation });
           }
         }
       }

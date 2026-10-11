@@ -1,20 +1,23 @@
-// Pure region-build/v1 CompileRegionBuild: a region voxel block + palette build
-// is split into Luanti-mapblock-aligned chunks (region-operations/v1). No world
-// connection, mutation, persistence, model access, clock or randomness. Canvas
-// owns every transaction decision; Adapter transports.
+// Pure region-build/v2 CompileRegionBuild: a region voxel block + palette build
+// is split into chunks along the partition the request carries from the world
+// source (region-operations/v2). Brush names no chunk edge and no material of its
+// own: the edge is request.partition, carving is whatever palette entry the
+// request Catalogue declares as emptyMaterialRef. No world connection, mutation,
+// persistence, model access, clock or randomness. Canvas owns every transaction
+// decision; the world source transports.
 //
 // Every public type, canonical encoding, digest and compatibility rule comes from
 // the admitted hanaworlds-contracts package (src/contracts.mjs); this module only orders those
 // public helpers and performs the chunk split.
 
-import { types as nodeTypes } from 'node:util';
 import {
-  ContractError, admitRequest, validateResponse, digestValue, contractProtocols,
+  ContractError, decodeRawJSON, validateResponse, digestValue, contractProtocols,
   validateCompileRegionBuildRequest, validateCompiledRegionSet,
   expandRegionBlock, encodeRegionBlock, regionChunksOfBox,
 } from '#contracts';
+import { requestIdOf, requireSupportedProfiles } from './admit.mjs';
 
-const WIRE = 'region-build/v1';
+const WIRE = 'region-build/v2';
 const OPERATION = 'CompileRegionBuild';
 
 /** Protocols this compiler speaks, at the minor the admitted contracts declare. */
@@ -23,7 +26,7 @@ export const brushProtocols = Object.freeze(['BUILD', 'region-build'].map(name =
   if (!p) throw new Error(`brush: admitted contracts lack protocol ${name}`);
   return Object.freeze({ protocol: p.protocol, major: p.major, minor: p.minor });
 }));
-export const brushCapabilities = Object.freeze(['BUILD/V4:per-cell-compile', 'region-build/v1:compile-mapblock-chunks']);
+export const brushCapabilities = Object.freeze(['BUILD/V5:per-cell-compile', 'region-build/v2:compile-partition-chunks']);
 
 /** Copy the clipped box of the build's VoxelArea-order indices; -1 stays UNSPECIFIED. */
 function clip(build, box) {
@@ -43,32 +46,25 @@ function clip(build, box) {
 function stage(request) {
   const build = expandRegionBlock(request.build.block);
   const chunks = [];
-  // regionChunksOfBox yields every intersecting mapblock in ascending x,y,z with its clipped box.
-  for (const { chunkPos, box } of regionChunksOfBox(build.box)) {
+  // regionChunksOfBox yields every intersecting partition chunk in ascending x,y,z with its clipped box.
+  for (const { chunkPos, box } of regionChunksOfBox(build.box, request.partition)) {
     const part = clip(build, box);
     if (!part.specified) continue; // an all-UNSPECIFIED chunk writes nothing and is not a valid block
-    chunks.push({ chunkPos: [...chunkPos], block: encodeRegionBlock({ origin: box.min, size: part.size, palette: build.palette, indices: part.indices }) });
+    const block = encodeRegionBlock({ origin: box.min, size: part.size, palette: build.palette, indices: part.indices });
+    chunks.push({ chunkPos: [...chunkPos], block, blockDigest: digestValue('region-block', block).sha256 });
   }
   const projection = {
-    contractVersion: 'region-operations/v1',
+    contractVersion: 'region-operations/v2',
     buildDigest: request.buildDigest,
     compilerRevision: request.compilerRevision,
     worldRef: request.worldRef,
     catalogueDigest: request.catalogueDigest,
-    chunkEdge: 16,
+    partition: { edge: [...request.partition.edge] },
     chunks,
   };
   const bounds = chunks.map(c => ({ min: c.block.origin, max: c.block.origin.map((o, a) => o + c.block.size[a] - 1) }));
   const writeBounds = { min: [0, 1, 2].map(a => Math.min(...bounds.map(b => b.min[a]))), max: [0, 1, 2].map(a => Math.max(...bounds.map(b => b.max[a]))) };
   return { projection, operationDigest: digestValue('region-operations', projection).sha256, writeBounds };
-}
-
-function requestIdOf(value) {
-  // A rejected pure-JSON input must never invoke caller code while recovering an ID.
-  if (value === null || typeof value !== 'object' || nodeTypes.isProxy(value) || Array.isArray(value)) return null;
-  const descriptor = Object.getOwnPropertyDescriptor(value, 'requestId');
-  const id = descriptor && Object.hasOwn(descriptor, 'value') ? descriptor.value : null;
-  return typeof id === 'string' && id.length > 0 ? id : null;
 }
 
 const isHostCapacityError = error => error instanceof RangeError && /^Invalid (typed array|string|array) length/.test(error.message);
@@ -77,12 +73,14 @@ const isHostCapacityError = error => error instanceof RangeError && /^Invalid (t
  * Compile one CompileRegionBuildRequest value. Returns a contracts-validated
  * CompileRegionBuildResponse with exactly one of result/error; a successful
  * result has also passed the public validateCompiledRegionSet equivalence
- * check. Failures carry zero chunks; with no recoverable requestId the
+ * check. A block in a geometry profile Brush does not expand is CAPABILITY_GAP /
+ * GEOMETRY_PROFILE_UNSUPPORTED, checked before the schema. Failures carry zero chunks; with no recoverable requestId the
  * ContractError itself is thrown. Non-contract exceptions propagate unchanged.
  */
 export function compileRegionBuild(value) {
   let request = null;
   try {
+    requireSupportedProfiles(value, WIRE, [['build', 'block', 'geometryProfile']]);
     request = validateCompileRegionBuildRequest(value);
     const response = { contractVersion: WIRE, requestId: request.requestId, result: stage(request), error: null };
     return validateCompiledRegionSet(request, response);
@@ -98,5 +96,5 @@ export function compileRegionBuild(value) {
 
 /** Compile from raw UTF-8 request bytes using the contracts strict decoder. */
 export function compileRegionBuildBytes(bytes) {
-  return compileRegionBuild(admitRequest(WIRE, OPERATION, bytes));
+  return compileRegionBuild(decodeRawJSON(bytes));
 }

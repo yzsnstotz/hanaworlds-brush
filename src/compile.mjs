@@ -1,20 +1,20 @@
-// Pure BUILD/V4 -> operations/v3 compiler. No world connection, no mutation,
+// Pure BUILD/V5 -> operations/v4 compiler. No world connection, no mutation,
 // no persistence, no model access, no clock, no randomness.
 //
 // Every public type, digest and coherence rule comes from the admitted
-// hanaworlds-contracts package (src/contracts.mjs pin) (current lane, which admits target-facts/v4
-// REGION_INSPECTED facts); this module only orders those checks
-// through current public validators and performs the unchanged expansion.
+// hanaworlds-contracts package (src/contracts.mjs); this module only orders those
+// checks through current public validators and performs the unchanged expansion.
+// Materials and orientations are opaque world-source values and pass through as given.
 
-import { types as nodeTypes } from 'node:util';
 import {
   ContractError, validateBoundRequest, digestValue, validateFactsCoverage,
   validateStaticMaterials, validateWitnessCoherence, unionCellCount, comparePosition,
-  validateResponse, admitRequest,
+  validateResponse, decodeRawJSON,
 } from '#contracts';
 import { expandEffects, unionBounds } from './expand.mjs';
+import { requestIdOf, requireSupportedProfiles } from './admit.mjs';
 
-const WIRE = 'BUILD/V4';
+const WIRE = 'BUILD/V5';
 const OPERATION = 'BuildDocument';
 
 /**
@@ -35,8 +35,7 @@ const key = p => `${p[0]},${p[1]},${p[2]}`;
 
 /**
  * Internal (not a package export): bind target facts to the request by source.
- * INSPECTED and REGION_INSPECTED (target-facts/v4, a first building's inspected
- * region) are both observed world facts bound to the request world. Only
+ * INSPECTED and REGION_INSPECTED (a first building's inspected region) are both observed world facts bound to the request world. Only
  * PLANNED facts describe a preceding plan; REGION_INSPECTED is never PLANNED.
  * contracts validateBoundRequest enforces the same world binding first;
  * this is Brush's own binding and is unit-tested directly.
@@ -87,16 +86,16 @@ function stage(request) {
   const effects = expandEffects(build.operations, build.materials);
   if (BigInt(effects.length) !== cellCount) throw new Error('brush: expansion count invariant violated');
 
-  // every written cell must be a known (occupied or empty) target fact; unknown or unsampled is never air
+  // every written cell must be a known (occupied or empty) target fact; unknown or unsampled is never treated as empty
   const known = new Set([...facts.occupiedCells.map(c => key(c.position)), ...facts.knownEmptyCells.map(key)]);
   for (const effect of effects) check(known.has(key(effect.position)), 'TARGET_FACTS_INCOMPLETE', 'REQUIRED_FACT_UNKNOWN');
 
   // recompute safety witnesses against the exact final effects
-  const finalEffects = { profileVersion: 'final-effects/v2', frameDigest, catalogueDigest: request.catalogueDigest, effects };
-  validateWitnessCoherence({ build, finalEffects, targetFacts: facts, safetyProfile: request.safetyProfile, catalogue, witnesses: build.witnesses });
+  const finalEffects = { profileVersion: 'final-effects/v3', frameDigest, catalogueDigest: request.catalogueDigest, effects };
+  validateWitnessCoherence({ build, finalEffects, targetFacts: facts, safetyProfile: request.safetyProfile, catalogue });
 
   const operations = digestValue('operations', {
-    contractVersion: 'operations/v3',
+    contractVersion: 'operations/v4',
     buildDigest: request.buildDigest,
     compilerRevision: request.compilerRevision,
     compilationConfigDigest: request.compilationConfigDigest,
@@ -107,14 +106,6 @@ function stage(request) {
     effects,
   });
   return { projection: operations.projection, operationDigest: operations.sha256, readBounds: facts.sampledBounds, writeBounds };
-}
-
-function requestIdOf(value) {
-  // A rejected pure-JSON input must never invoke caller code while recovering an ID.
-  if (value === null || typeof value !== 'object' || nodeTypes.isProxy(value) || Array.isArray(value)) return null;
-  const descriptor = Object.getOwnPropertyDescriptor(value, 'requestId');
-  const id = descriptor && Object.hasOwn(descriptor, 'value') ? descriptor.value : null;
-  return typeof id === 'string' && id.length > 0 ? id : null;
 }
 
 function isHostCapacityError(error) {
@@ -129,6 +120,8 @@ function respond(requestId, result, error) {
  * Compile one BuildDocumentRequest value.
  *
  * Returns a validated BuildDocumentResponse with exactly one of result/error.
+ * A build or target facts in a geometry profile Brush does not expand is
+ * CAPABILITY_GAP / GEOMETRY_PROFILE_UNSUPPORTED, checked before the schema.
  * A typed failure carries zero output. When the failure cannot be expressed in
  * a valid response (no recoverable requestId) the ContractError itself is thrown; nothing is
  * produced in either case. Non-contract exceptions are programming defects
@@ -137,6 +130,7 @@ function respond(requestId, result, error) {
 export function compileBuildDocument(value) {
   let request = null;
   try {
+    requireSupportedProfiles(value, WIRE, [['build', 'geometryProfile'], ['targetFacts', 'geometryProfile']]);
     request = validateBoundRequest(WIRE, OPERATION, value);
     return respond(request.requestId, stage(request), null);
   } catch (error) {
@@ -151,6 +145,7 @@ export function compileBuildDocument(value) {
 
 /** Compile from raw UTF-8 request bytes using the contracts strict decoder. */
 export function compileBuildDocumentBytes(bytes) {
-  // Raw strict decode (UTF-8, duplicate decoded keys, pure JSON) precedes everything else.
-  return compileBuildDocument(admitRequest(WIRE, OPERATION, bytes));
+  // Raw strict decode (UTF-8, duplicate decoded keys, pure JSON) precedes everything else;
+  // the profile check and schema then run exactly as for a value.
+  return compileBuildDocument(decodeRawJSON(bytes));
 }
