@@ -115,6 +115,47 @@ test('the empty material is whatever the request catalogue declares: a catalogue
  rejects(request([0,0,0],[2,1,1],[{materialRef:'air',orientation:0},STONE],[0,1],'air',{catalogue}),'CATALOGUE_MISMATCH');
 });
 
+test('request partition and opaque empty material work together through value, bytes and service entry points',()=>{
+ const base=fixture.compileRequest.catalogue,EMPTY={materialRef:'source:empty-03',orientation:0};
+ const materials={...base.materials,[EMPTY.materialRef]:base.materials[base.emptyMaterialRef]};
+ delete materials[base.emptyMaterialRef];
+ const catalogue={...base,emptyMaterialRef:EMPTY.materialRef,materials};
+ const origin=[-3,-2,-1],size=[9,5,7],partition={edge:[2,3,4]};
+ const indices=Array.from({length:size[0]*size[1]*size[2]},(_,i)=>i%5===0?-1:i%3===0?0:1);
+ const q=request(origin,size,[EMPTY,STONE],indices,'brush-03-source',{catalogue,partition});
+ const before=json(q),bytes=new TextEncoder().encode(before),provided=[];
+ brush.apply({provide:(...args)=>provided.push(args)});
+ const service=provided[0][1];
+ const outputs=[brush.compileRegionBuild(q),brush.compileRegionBuildBytes(bytes),service.compileRegion(q),service.compileRegionBytes(bytes)];
+ const expected=oracle(origin,size,[EMPTY,STONE],indices);
+ const expectedChunks=new Set([...expected.keys()].map(p=>json(JSON.parse(p).map((v,a)=>Math.floor(v/partition.edge[a])))));
+ for(const out of outputs){
+  assert.equal(out.error,null,json(out.error));
+  insidePartition(out,partition.edge);
+  assert.equal(out.result.projection.chunks.length,expectedChunks.size);
+  assert.deepEqual(readback(out),expected);
+  assert.ok([...readback(out).values()].includes(json(EMPTY)));
+  for(const chunk of out.result.projection.chunks) assert.equal(chunk.blockDigest,D('region-block',chunk.block));
+  assert.equal(out.result.operationDigest,D('region-operations',out.result.projection));
+  c.validateCompiledRegionSet(q,out);
+  assert.equal(json(out),json(outputs[0]));
+ }
+ assert.equal(json(q),before);
+});
+
+test('missing or malformed source partition and emptyMaterialRef reject with zero output instead of defaults',()=>{
+ const invalid=[];
+ const missing=structuredClone(fixture.compileRequest);delete missing.partition;invalid.push(missing);
+ for(const partition of [null,{edge:[0,2,3]},{edge:[-1,2,3]},{edge:[1.5,2,3]},{edge:[2,3]},{edge:16}])
+  invalid.push({...structuredClone(fixture.compileRequest),partition});
+ const empty=structuredClone(fixture.compileRequest);delete empty.catalogue.emptyMaterialRef;invalid.push(empty);
+ for(const q of invalid){
+  rejects(q,'SCHEMA_INVALID');
+  const out=brush.compileRegionBuildBytes(new TextEncoder().encode(json(q)));
+  assert.equal(out.result,null);assert.equal(out.error.code,'SCHEMA_INVALID');assert.equal(out.error.mutationState,'NONE');
+ }
+});
+
 test('a region block in a geometry profile Brush does not expand is CAPABILITY_GAP with zero output (value and bytes)',()=>{
  const q=structuredClone(fixture.compileRequest);q.build.block.geometryProfile='hex-grid/v1';
  for(const out of [brush.compileRegionBuild(q),brush.compileRegionBuildBytes(new TextEncoder().encode(json(q)))]){
@@ -141,6 +182,7 @@ test('protocol: same major with other patch/hash is consumable; wrong major, low
  err(()=>c.checkProtocolCompatibility(brush.protocolHandshake,[c.protocolRequirement('region-build/v1')]),'UNSUPPORTED_VERSION');
  err(()=>c.checkProtocolCompatibility(brush.protocolHandshake,[c.protocolRequirement(WIRE,[],brush.brushProtocols.find(p=>p.protocol==='region-build').minor+1)]),'UNSUPPORTED_VERSION');
  err(()=>c.checkProtocolCompatibility(brush.protocolHandshake,[c.protocolRequirement(WIRE,['canvas-region/v3:whole-region-undo'])]),'CAPABILITY_UNAVAILABLE');
+ err(()=>c.checkProtocolCompatibility(brush.protocolHandshake,[c.protocolRequirement(WIRE,['region-build/v2:compile-mapblock-chunks'])]),'CAPABILITY_UNAVAILABLE');
  err(()=>c.checkProtocolCompatibility(brush.contractHandshake,need),'UNSUPPORTED_VERSION');
  rejects({...fixture.compileRequest,contractVersion:'region-build/v1'},'UNSUPPORTED_VERSION'); // typed error response, zero output
 });
