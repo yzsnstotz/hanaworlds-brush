@@ -181,8 +181,8 @@ test('protocol: same major with other patch/hash is consumable; wrong major, low
  const err=(fn,code)=>assert.throws(fn,e=>e.code===code);
  err(()=>checkProtocolCompatibility(brush.protocolHandshake,[protocolRequirement('region-build/v1')]),'UNSUPPORTED_VERSION');
  err(()=>checkProtocolCompatibility(brush.protocolHandshake,[protocolRequirement(WIRE,[],brush.brushProtocols.find(p=>p.protocol==='region-build').minor+1)]),'UNSUPPORTED_VERSION');
- err(()=>checkProtocolCompatibility(brush.protocolHandshake,[protocolRequirement(WIRE,['canvas-region/v3:whole-region-undo'])]),'CAPABILITY_UNAVAILABLE');
- err(()=>checkProtocolCompatibility(brush.protocolHandshake,[protocolRequirement(WIRE,['region-build/v2:compile-mapblock-chunks'])]),'CAPABILITY_UNAVAILABLE');
+ err(()=>checkProtocolCompatibility(brush.protocolHandshake,[protocolRequirement(WIRE,['test:missing-capability'])]),'CAPABILITY_UNAVAILABLE');
+ err(()=>checkProtocolCompatibility(brush.protocolHandshake,[protocolRequirement(WIRE,['region-build/v2:test-unadvertised-capability'])]),'CAPABILITY_UNAVAILABLE');
  err(()=>checkProtocolCompatibility(brush.contractHandshake,need),'UNSUPPORTED_VERSION');
  rejects({...fixture.compileRequest,contractVersion:'region-build/v1'},'UNSUPPORTED_VERSION'); // typed error response, zero output
 });
