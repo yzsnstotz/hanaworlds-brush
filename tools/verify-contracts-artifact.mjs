@@ -1,63 +1,43 @@
-// Exact dev-only published tag/lock/package byte admission; never run against production consumers.
-import { execFileSync } from 'node:child_process';
+// Local source admission only. Normal build must never acquire a supplier or pack recursively.
+import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { mkdtempSync, mkdirSync, readFileSync, readdirSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { dirname, join, relative, resolve } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { readFileSync, readdirSync } from 'node:fs';
+import { join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { OWN_CONTRACTS, OWN_SOURCE_FILES } from './development-contracts.mjs';
 
-const brushRoot = resolve(process.argv[2] ?? fileURLToPath(new URL('..', import.meta.url)));
-const { ADMITTED_CONTRACTS, contractsPackageUrl } = await import(pathToFileURL(join(brushRoot, 'tools/development-contracts.mjs')).href);
-const pkgDir = dirname(fileURLToPath(contractsPackageUrl));
-const listFiles = dir => readdirSync(dir, { recursive: true, withFileTypes: true })
-  .filter(d => d.isFile()).map(d => relative(dir, join(d.parentPath, d.name))).sort();
-const pkg = JSON.parse(readFileSync(join(pkgDir, 'package.json'), 'utf8'));
-const brushPkg = JSON.parse(readFileSync(join(brushRoot, 'package.json'), 'utf8'));
-for (const field of ['dependencies', 'peerDependencies', 'optionalDependencies']) {
- if (brushPkg[field]?.[ADMITTED_CONTRACTS.name]) throw new Error('Production contracts dependency: ' + field);
+export function verifyOwnContracts(root = fileURLToPath(new URL('..', import.meta.url))) {
+  root = resolve(root);
+  const read = path => readFileSync(join(root, path));
+  const sha = path => createHash('sha256').update(read(path)).digest('hex');
+  const schema = JSON.parse(read(OWN_CONTRACTS.schema));
+  const metadata = JSON.parse(read(OWN_CONTRACTS.metadata));
+  assert.equal(schema['x-contract'], OWN_CONTRACTS.contract, 'wrong local contract identity');
+  assert.deepEqual(schema['x-roots'], ['BuildDocumentRequest', 'BuildDocumentResponse', 'CompileRegionBuildRequest', 'CompileRegionBuildResponse'], 'wrong local contract roots');
+  assert.equal(Object.keys(schema.definitions).length, 102, 'incomplete local schema closure');
+  for (const ref of JSON.stringify(schema).matchAll(/"\$ref":"([^"]+)"/g)) {
+    assert.ok(ref[1].startsWith('#/definitions/'), 'external schema reference');
+    assert.ok(Object.hasOwn(schema.definitions, ref[1].slice(14)), 'missing local schema definition');
+  }
+  assert.equal(createHash('sha256').update(JSON.stringify(schema)).digest('hex'), OWN_CONTRACTS.schemaContentSha256, 'changed local schema closure');
+  assert.equal(createHash('sha256').update(JSON.stringify(metadata)).digest('hex'), OWN_CONTRACTS.metadataContentSha256, 'changed local metadata closure');
+  assert.equal(sha(OWN_CONTRACTS.types), OWN_CONTRACTS.typesSha256, 'changed local declaration closure');
+  const sourceFiles = readdirSync(join(root, 'src'), {recursive:true,withFileTypes:true}).filter(file=>file.isFile()).map(file=>join(file.parentPath,file.name).slice(root.length+1)).sort();
+  assert.deepEqual(sourceFiles, OWN_SOURCE_FILES, 'unexpected local source closure');
+  assert.equal(metadata.scope, 'EXISTING_BRUSH_PACKAGE_METADATA_ONLY_NOT_NEW_C_BRUSH_OPERATIONS', 'wrong metadata source');
+  const pkg = JSON.parse(read('package.json')), lock = JSON.parse(read('package-lock.json'));
+  for (const field of ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies']) {
+    assert.equal(pkg[field]?.['hanaworlds-contracts'], undefined, 'retired supplier dependency: '+field);
+    assert.deepEqual(lock.packages['']?.[field] ?? {}, pkg[field] ?? {}, 'local dependency lock mismatch: '+field);
+  }
+  assert.equal(lock.packages?.['node_modules/hanaworlds-contracts'], undefined, 'retired supplier lock');
+  for (const path of readdirSync(join(root, 'types'), {recursive:true}).filter(path=>/\.d\.(mts|ts)$/.test(path)))
+    assert.doesNotMatch(read('types/'+path).toString(), /(?:from\s*|import\s*\()\s*['"]hanaworlds-contracts(?:\/|['"])/, 'retired declaration supplier');
+  for (const type of Object.keys(schema.definitions))
+    assert.match(read(OWN_CONTRACTS.types).toString(), new RegExp('export type '+type+'\\s*='), 'missing local public type: '+type);
+  return {match:true, contract:OWN_CONTRACTS.contract, definitions:Object.keys(schema.definitions).length,
+    schemaSha256:sha(OWN_CONTRACTS.schema), metadataSha256:sha(OWN_CONTRACTS.metadata), typesSha256:sha(OWN_CONTRACTS.types),
+    dependenciesIndependent:true, lockIndependent:true};
 }
-const declared = brushPkg.devDependencies?.[ADMITTED_CONTRACTS.name] ?? null;
-let lockResolved = null;
-let lockDeclared = null;
-let lockVersion = null;
-try {
-  const lock = JSON.parse(readFileSync(join(brushRoot, 'package-lock.json'), 'utf8'));
-  lockResolved = lock.packages?.[`node_modules/${ADMITTED_CONTRACTS.name}`]?.resolved ?? null;
-  lockVersion = lock.packages?.[`node_modules/${ADMITTED_CONTRACTS.name}`]?.version ?? null;
-  lockDeclared = lock.packages?.['']?.devDependencies?.[ADMITTED_CONTRACTS.name] ?? null;
-}
-catch (error) { if (error.code !== 'ENOENT') throw error; } // Missing development lock is a failed admission, never production validation.
-const lockMatchesRelease = (lockDeclared === ADMITTED_CONTRACTS.dependency && lockVersion === ADMITTED_CONTRACTS.version && lockResolved === 'git+ssh://git@github.com/yzsnstotz/hanaworlds-contracts.git#ee53aed37117bc859d9cbb2aedee9ea7d8dfc8b1');
-const out = mkdtempSync(join(process.env.BRUSH_VERIFY_TMP ?? tmpdir(), 'brush-contracts-pack-'));
-try {
-  const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
-  const [packed] = JSON.parse(execFileSync(npm, ['pack', pkgDir, '--pack-destination', out, '--json'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'inherit'] }));
-  const sha256 = createHash('sha256').update(readFileSync(join(out, packed.filename))).digest('hex');
-  // All 39 release paths and byte hashes admitted from the fresh locked v2.2.1 install.
-  // This equals the original build-provenance sdkFilesSha256. npm/Node gzip encoders
-  // can produce different compressed bytes for the very same tar; admission must
-  // pin release contents, rather than compressor output or a self-comparison.
-  const expectedSdkFilesSha256 = 'd6bc03848d95ea94ba07b0cbe05bd67f1031aca84a7ce0c154e41238324199b6';
-  const extract = join(out, 'x');
-  mkdirSync(extract);
-  execFileSync('tar', ['-xzf', join(out, packed.filename), '-C', extract]);
-  const packedFiles = listFiles(join(extract, 'package'));
-  const sdkFiles = Object.fromEntries(packedFiles.map(f => [f,
-    createHash('sha256').update(readFileSync(join(extract, 'package', f))).digest('hex')]));
-  const sdkFilesSha256 = createHash('sha256').update(JSON.stringify(sdkFiles)).digest('hex');
-  const presentFiles = listFiles(pkgDir);
-  const mismatched = packedFiles.filter(f => !readFileSync(join(extract, 'package', f)).equals(readFileSync(join(pkgDir, f))));
-  const extra = presentFiles.filter(f => !packedFiles.includes(f));
-  const report = {
-    admitted: ADMITTED_CONTRACTS, brushRoot, declared, lockResolved, lockMatchesRelease, checkedDir: pkgDir, name: pkg.name, version: pkg.version,
-    repackSha256: sha256, sdkFilesSha256, expectedSdkFilesSha256, entries: packed.entryCount, mismatchedFiles: mismatched, extraFiles: extra,
-    declaredIsReleaseTag: declared === ADMITTED_CONTRACTS.dependency,
-    versionIsRelease: pkg.version === ADMITTED_CONTRACTS.version,
-    match: lockMatchesRelease && sdkFilesSha256 === expectedSdkFilesSha256 && declared === ADMITTED_CONTRACTS.dependency && pkg.name === ADMITTED_CONTRACTS.name &&
-      pkg.version === ADMITTED_CONTRACTS.version && mismatched.length === 0 && extra.length === 0,
-  };
-  console.log(JSON.stringify(report, null, 2));
-  process.exitCode = report.match ? 0 : 1;
-} finally {
-  rmSync(out, { recursive: true, force: true });
-}
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url))
+  console.log(JSON.stringify(verifyOwnContracts(process.argv[2]), null, 2));

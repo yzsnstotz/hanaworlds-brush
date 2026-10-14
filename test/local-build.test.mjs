@@ -1,23 +1,19 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { buildRequest, metadata, checkContractHandshake } from './legacy-document-fixtures.mjs';
 const entry=import.meta.resolve(process.env.BRUSH_UNDER_TEST ?? '../dist/index.mjs');
 const brush=await import(entry);
-const pin=await import('../tools/development-contracts.mjs');
-const a=await import(pin.contractsUrl);
-const fixture=JSON.parse(readFileSync(new URL(pin.contractsFixtureUrl('main'))));
+const a=await import(new URL('contracts.mjs',entry));
 const D=(kind,value)=>a.digestValue(kind,value).sha256;
 const WIRE='BUILD/V5';
-const STONE={geometryProfile:'voxel-grid/v1',materialRef:'fixture:stone',orientation:0};
+const STONE={geometryProfile:'voxel-grid/v1',materialRef:'doc:solid',orientation:0};
 function request() {
- const r=fixture.request,b=structuredClone(fixture.response.result.build);
- const config={profileVersion:'compilation-config/v3',writeBackend:{profileId:'static-local',revision:'static-1'},overlapRule:'last-writer-wins',effectOrder:'numeric-x-y-z',compressionRule:'exact-final-effects-only'};
- return {contractVersion:WIRE,sessionRef:r.sessionRef,requestId:'brush-current-1',worldRef:r.worldRef,localContext:structuredClone(r.localContext),build:b,buildDigest:D('build',b),catalogue:structuredClone(r.catalogue),catalogueDigest:b.catalogueDigest,targetFacts:structuredClone(r.targetFacts),targetFactsDigest:r.targetFactsDigest,safetyProfile:structuredClone(r.safetyProfile),safetyProfileDigest:r.safetyProfileDigest,compilationConfig:config,compilationConfigDigest:D('compilation-config',config),compilerRevision:'brush-fixture-1'};
+ const q=buildRequest();q.requestId='brush-current-1';return q;
 }
 test('current BUILD/V5 compiles to exact operations/v4 through the public API; materialRef/orientation pass through opaque',()=>{
  const q=request(),out=brush.compileBuildDocument(q);
  assert.equal(out.error,null);assert.equal(out.contractVersion,WIRE);assert.equal(out.result.projection.contractVersion,'operations/v4');
- assert.deepEqual(JSON.parse(JSON.stringify(out.result.projection.effects)),[{...STONE,position:[0,1,3]}]);
+ assert.deepEqual(JSON.parse(JSON.stringify(out.result.projection.effects)),[{...STONE,position:[-1,0,2]}]);
  a.validateBoundResponse(WIRE,'BuildDocument',q,out);
 });
 test('a build or target facts in a geometry profile Brush does not expand is CAPABILITY_GAP with zero output (value and bytes)',()=>{
@@ -45,7 +41,7 @@ test('value/bytes repeats are deterministic and do not mutate input',()=>{
 });
 test('overlapping inclusive boxes retain exact last-writer effects and numeric order',()=>{
  const q=request(),empty={materialRef:q.catalogue.emptyMaterialRef,orientation:0},E={geometryProfile:'voxel-grid/v1',...empty};
- q.build.operations=[{op:'set_box',min:[-2,0,0],max:[1,0,0],materialRef:'stone'},{op:'set_box',min:[-1,0,0],max:[0,0,0],materialRef:'empty'}];
+ q.build.operations=[{op:'set_box',min:[-2,0,0],max:[1,0,0],materialRef:'solid'},{op:'set_box',min:[-1,0,0],max:[0,0,0],materialRef:'empty'}];
  q.build.materials.empty=empty;q.build.declaredBounds={min:[-2,0,0],max:[1,0,0]};
  const effects=[{...STONE,position:[-2,0,0]},{...E,position:[-1,0,0]},{...E,position:[0,0,0]},{...STONE,position:[1,0,0]}];
  const positions=effects.map(e=>e.position);
@@ -65,11 +61,11 @@ test('localContext and observed facts reject a different request world',()=>{
 test('payload/frame digests and invalid declared geometry reject with zero operations',()=>{
  const q=request();q.buildDigest='0'.repeat(64);reject(q,'NON_CANONICAL_AMBIGUITY');
  const f=request();f.build.coordinateFrame.origin[0]=1;f.buildDigest=D('build',f.build);reject(f,'NON_CANONICAL_AMBIGUITY');
- const g=request();g.build.declaredBounds.max[0]=1; // malformed geometry cannot be digest-bound
+ const g=request();g.build.declaredBounds.max[0]=0; // malformed geometry cannot be digest-bound
  const out=brush.compileBuildDocument(g);assert.equal(out.result,null);assert.equal(out.error.code,'SCHEMA_INVALID');
 });
 test('unknown target and a body-clearance witness that does not cover the final effects never yield operations',()=>{
- const q=request();q.targetFacts.unknownCells=[{position:[0,1,3],reason:'UNLOADED'}];q.targetFacts.knownEmptyCells=[];q.targetFacts.usableVolume=null;
+ const q=request();q.targetFacts.unknownCells=[{position:[-1,0,2],reason:'UNLOADED'}];q.targetFacts.knownEmptyCells=[];q.targetFacts.usableVolume=null;
  rebind(q);reject(q,'TARGET_FACTS_INCOMPLETE');
  const b=request();b.build.witnesses.find(w=>w.predicate==='BODY_CLEARANCE').facts.positions=[]; // no player geometry in witnesses; real bodies are engine-checked
  b.buildDigest=D('build',b.build);reject(b,'SAFETY_INVARIANT_FAILED');
@@ -82,7 +78,7 @@ test('raw duplicate keys and old/authority fields are strictly rejected',()=>{
 });
 test('current service advertises exact handshake and no world/persistence/model port',()=>{
  const provided=[];brush.apply({provide:(...args)=>provided.push(args)});assert.equal(provided.length,1);assert.equal(provided[0][0],'hanaworldsBrushV3');
- const service=provided[0][1],status=service.status();assert.equal(brush.BrushV2,undefined);assert.deepEqual(plain(service.handshake()),plain(a.contractHandshake));a.checkContractHandshake(service.handshake());
+ const service=provided[0][1],status=service.status();assert.equal(brush.BrushV2,undefined);assert.deepEqual(plain(service.handshake()),plain(metadata.legacyContractHandshake));checkContractHandshake(service.handshake());
  assert.equal(status.input,WIRE);assert.equal(status.output,'operations/v4');assert.deepEqual([...status.geometryProfiles],['voxel-grid/v1']);assert.equal(status.worldAccess,'NONE');assert.equal(status.persistence,'NONE');assert.equal(status.modelAccess,'NONE');assert.deepEqual(brush.inject,[]);
  assert.deepEqual(plain(service.compile(request())),plain(brush.compileBuildDocument(request())));
  assert.deepEqual(plain(service.compileBytes(new TextEncoder().encode(JSON.stringify(request())))),plain(service.compile(request())));

@@ -15,7 +15,7 @@ assert.equal(provided.length,1);assert.equal(provided[0][0],b.serviceName);
 const service=provided[0][1];
 for(const compile of [b.compileBuildDocument,service.compile.bind(service)]) {
  const out=compile(data.build);assert.equal(json(out),json(data.buildResponse));
- assert.deepEqual(JSON.parse(json(out.result.projection.effects)),[{geometryProfile:'voxel-grid/v1',position:[0,1,3],materialRef:'fixture:stone',orientation:0}]);
+ assert.deepEqual(JSON.parse(json(out.result.projection.effects)),[{geometryProfile:'voxel-grid/v1',position:[-1,0,2],materialRef:'doc:solid',orientation:0}]);
  const bad=structuredClone(data.build);bad.buildDigest='0'.repeat(64);
  const rejected=compile(bad);assert.equal(rejected.result,null);assert.equal(rejected.error.code,'NON_CANONICAL_AMBIGUITY');assert.equal(rejected.error.mutationState,'NONE');
 }

@@ -1,22 +1,20 @@
-// region-build/v2 CompileRegionBuild through the public entry only (source, or
-// the installed package via BRUSH_UNDER_TEST). Requests are built from the
-// admitted contracts public region fixture and public helpers; catalogue
-// and world context are that SOURCE/FIXTURE. No world, model, Painter or other
-// peer is involved.
+// Region geometry regressions derive source facts from complete C-brush document samples.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {readFileSync} from 'node:fs';
+import { regionSample, protocolRequirement, checkProtocolCompatibility } from './legacy-document-fixtures.mjs';
 const entry=import.meta.resolve(process.env.BRUSH_UNDER_TEST ?? '../dist/index.mjs');
 const brush=await import(entry);
-const pin=await import('../tools/development-contracts.mjs');
-const c=await import(pin.contractsUrl);
-const fixture=JSON.parse(readFileSync(new URL(pin.contractsFixtureUrl('brush-placement')))).region;
+const c=await import(new URL('contracts.mjs',entry));
+const fixture={compileRequest:regionSample.request,compileResponse:regionSample.expected};
+const CUBIC={edge:[16,16,16]}; // Explicit geometry regression input, never a compiler default.
+const testCatalogue=structuredClone(fixture.compileRequest.catalogue);
+testCatalogue.materials['test:alternate']=structuredClone(testCatalogue.materials['doc:solid']);
 const WIRE='region-build/v2';
-const AIR={materialRef:fixture.compileRequest.catalogue.emptyMaterialRef,orientation:0},DIRT={materialRef:'fixture:dirt',orientation:0},STONE={materialRef:'fixture:stone',orientation:0};
+const AIR={materialRef:fixture.compileRequest.catalogue.emptyMaterialRef,orientation:0},DIRT={materialRef:'test:alternate',orientation:0},STONE={materialRef:'doc:solid',orientation:0};
 const D=(kind,v)=>c.digestValue(kind,v).sha256;
 const json=v=>JSON.stringify(v);
-/** Request for an arbitrary block over the public fixture session/world/catalogue (or a given catalogue/partition). */
-function request(origin,size,palette,indices,requestId='brush-region-test',{catalogue=fixture.compileRequest.catalogue,partition=fixture.compileRequest.partition}={}){
+/** Request for an arbitrary block over the document session/world/catalogue (or a given catalogue/partition). */
+function request(origin,size,palette,indices,requestId='brush-region-test',{catalogue=testCatalogue,partition=fixture.compileRequest.partition}={}){
  const block=c.encodeRegionBlock({origin,size,palette,indices}),catalogueDigest=D('catalogue',catalogue);
  const build={...fixture.compileRequest.build,catalogueDigest,block,declaredBounds:c.regionBlockBox(block)};
  return {...fixture.compileRequest,requestId,build,buildDigest:D('region-build',build),catalogue,catalogueDigest,partition};
@@ -35,13 +33,13 @@ function oracle(origin,size,palette,indices){const m=new Map();let i=0;
   if(indices[i]!==-1)m.set(json([origin[0]+x,origin[1]+y,origin[2]+z]),json(palette[indices[i]]));return m;}
 /** Read back what the compiled chunks would write, cell by cell. */
 function readback(out){const m=new Map();
- for(const ch of out.result.projection.chunks){const e=c.expandRegionBlock(ch.block);const [sx,sy]=e.size;
+ for(const ch of out.result.projection.chunks){const e=c.expandRegionBlock(ch.block);const [sx,sy]=ch.block.size;
   for(let i=0;i<e.indices.length;i++){if(e.indices[i]===-1)continue;
    const p=[e.box.min[0]+i%sx,e.box.min[1]+Math.floor(i/sx)%sy,e.box.min[2]+Math.floor(i/(sx*sy))];
    assert.ok(!m.has(json(p)),'cell emitted twice');m.set(json(p),json(e.palette[e.indices[i]]));}}return m;}
 const rejects=(q,code)=>{const out=brush.compileRegionBuild(q);assert.equal(out.result,null);assert.equal(out.error.code,code,json(out.error));assert.equal(out.error.mutationState,'NONE');return out;};
 
-test('public contracts fixture: compile reproduces the published region-operations byte-for-byte via library, raw bytes and Cordis',()=>{
+test('complete C-brush document sample: compile reproduces the published region-operations byte-for-byte via library, raw bytes and Cordis',()=>{
  const out=brush.compileRegionBuild(fixture.compileRequest);
  assert.equal(out.error,null);
  assert.equal(json(out),json(fixture.compileResponse));
@@ -54,7 +52,7 @@ test('public contracts fixture: compile reproduces the published region-operatio
 });
 
 test('fill: every specified cell reads back exactly once with its material; repeat compile is identical and input unchanged',()=>{
- const indices=new Array(3*2*2).fill(1),q=request([0,1,3],[3,2,2],[AIR,STONE],indices);
+ const indices=new Array(3*2*2).fill(1),q=request([0,1,3],[3,2,2],[AIR,STONE],indices,'fill',{partition:CUBIC});
  const before=json(q),a=brush.compileRegionBuild(q),b=brush.compileRegionBuild(structuredClone(q));
  assert.equal(a.error,null);assert.equal(json(a),json(b));assert.equal(json(q),before);
  assert.deepEqual(readback(a),oracle([0,1,3],[3,2,2],[AIR,STONE],indices));
@@ -65,16 +63,16 @@ test('fill: every specified cell reads back exactly once with its material; repe
 });
 
 test('carve: only the explicit empty material carves, UNSPECIFIED stays UNSPECIFIED, an all-UNSPECIFIED chunk is not emitted',()=>{
- // 18 wide on the fixture partition [16,16,16]: x 0..15 in chunk 0, x 16..17 in chunk 1; chunk 1 is entirely unspecified.
+ // 18 wide on the explicit test partition [16,16,16]: x 0..15 in chunk 0, x 16..17 in chunk 1; chunk 1 is entirely unspecified.
  const size=[18,1,1],indices=Array.from({length:18},(_,x)=>x>=16?-1:x%3===0?0:x%3===1?1:-1);
- const out=brush.compileRegionBuild(request([0,0,0],size,[AIR,STONE],indices));
+ const out=brush.compileRegionBuild(request([0,0,0],size,[AIR,STONE],indices,'carve',{partition:CUBIC}));
  assert.equal(out.error,null);
  assert.equal(json(out.result.projection.chunks.map(ch=>ch.chunkPos)),json([[0,0,0]]));
  const got=readback(out);assert.deepEqual(got,oracle([0,0,0],size,[AIR,STONE],indices));
  assert.equal([...got.values()].filter(v=>v===json(AIR)).length,6);
  for(let x=0;x<18;x++) if(indices[x]===-1) assert.ok(!got.has(json([x,0,0])),`unspecified ${x} emitted`);
  // Carve and unspecified are not conflated: turning the carves into UNSPECIFIED changes the operations.
- const noCarve=brush.compileRegionBuild(request([0,0,0],size,[AIR,STONE],indices.map(v=>v===0?-1:v)));
+ const noCarve=brush.compileRegionBuild(request([0,0,0],size,[AIR,STONE],indices.map(v=>v===0?-1:v),'no-carve',{partition:CUBIC}));
  assert.notEqual(noCarve.result.operationDigest,out.result.operationDigest);
  assert.ok(![...readback(noCarve).values()].includes(json(AIR)));
  assert.equal(json(out.result.writeBounds),json({min:[0,0,0],max:[15,0,0]}));
@@ -83,7 +81,7 @@ test('carve: only the explicit empty material carves, UNSPECIFIED stays UNSPECIF
 test('cross-chunk with negative coordinates: ascending chunk order, chunks inside their partition cell, exact readback',()=>{
  const origin=[-20,-3,5],size=[40,20,30],n=size[0]*size[1]*size[2];
  let s=7;const indices=Array.from({length:n},()=>{s=(s*1103515245+12345)%2147483648;const r=s%7;return r<2?-1:r<3?0:r<5?1:2;});
- const out=brush.compileRegionBuild(request(origin,size,[AIR,DIRT,STONE],indices));
+ const out=brush.compileRegionBuild(request(origin,size,[AIR,DIRT,STONE],indices,'cross-chunk',{partition:CUBIC}));
  assert.equal(out.error,null);
  insidePartition(out,[16,16,16]);
  assert.equal(out.result.projection.chunks.length,4*3*3); // x -20..19 → chunks -2..1, y -3..16 → -1..1, z 5..34 → 0..2
@@ -96,7 +94,7 @@ test('partition comes from the request: a non-cubic [8,1,2] edge cuts there, the
  const odd=brush.compileRegionBuild(request(origin,size,[AIR,DIRT,STONE],indices,'odd',{partition:{edge:[8,1,2]}}));
  assert.equal(odd.error,null,json(odd.error));insidePartition(odd,[8,1,2]);
  c.validateCompiledRegionSet(request(origin,size,[AIR,DIRT,STONE],indices,'odd',{partition:{edge:[8,1,2]}}),odd);
- const cube=brush.compileRegionBuild(request(origin,size,[AIR,DIRT,STONE],indices,'odd'));
+ const cube=brush.compileRegionBuild(request(origin,size,[AIR,DIRT,STONE],indices,'odd',{partition:CUBIC}));
  assert.equal(cube.error,null);insidePartition(cube,[16,16,16]);
  assert.notEqual(odd.result.projection.chunks.length,cube.result.projection.chunks.length);
  assert.notEqual(odd.result.operationDigest,cube.result.operationDigest);
@@ -105,8 +103,10 @@ test('partition comes from the request: a non-cubic [8,1,2] edge cuts there, the
 });
 
 test('the empty material is whatever the request catalogue declares: a catalogue whose emptyMaterialRef is not "air" carves with it',()=>{
- const base=fixture.compileRequest.catalogue,VOID={materialRef:'fixture:void',orientation:0};
- const {air,...rest}=base.materials,catalogue={...base,emptyMaterialRef:VOID.materialRef,materials:{...rest,[VOID.materialRef]:air}};
+ const base=fixture.compileRequest.catalogue,VOID={materialRef:'test:void',orientation:0};
+ const materials={...base.materials,[VOID.materialRef]:base.materials[base.emptyMaterialRef]};
+ delete materials[base.emptyMaterialRef];
+ const catalogue={...base,emptyMaterialRef:VOID.materialRef,materials};
  const indices=[0,1,-1,0];
  const out=brush.compileRegionBuild(request([0,0,0],[4,1,1],[VOID,STONE],indices,'void',{catalogue}));
  assert.equal(out.error,null,json(out.error));
@@ -173,24 +173,24 @@ test('per-cell BUILD/V5 path and region path are both advertised; Brush stays pu
 
 test('protocol: same major with other patch/hash is consumable; wrong major, low minor, missing capability, old exact handshake and v1 wire are rejected',()=>{
  // ProtocolRequirements are ordered by protocol (UTF-16 ascending), as the contract schema requires.
- const need=[c.protocolRequirement('BUILD/V5',['BUILD/V5:per-cell-compile']),c.protocolRequirement(WIRE,['region-build/v2:compile-partition-chunks'])];
- assert.equal(c.checkProtocolCompatibility(brush.protocolHandshake,need).result,'PROTOCOL_COMPATIBLE');
+ const need=[protocolRequirement('BUILD/V5',['BUILD/V5:per-cell-compile']),protocolRequirement(WIRE,['region-build/v2:compile-partition-chunks'])];
+ assert.equal(checkProtocolCompatibility(brush.protocolHandshake,need).result,'PROTOCOL_COMPATIBLE');
  assert.equal(new brush.BrushV3().protocolHandshake(),brush.protocolHandshake);
  const otherBuild={...brush.protocolHandshake,provenance:{packageName:'hanaworlds-brush',packageVersion:'0.4.7',sourceRevision:'f'.repeat(40),artifactDigest:'a'.repeat(64)}};
- assert.equal(c.checkProtocolCompatibility(otherBuild,need).result,'PROTOCOL_COMPATIBLE');
+ assert.equal(checkProtocolCompatibility(otherBuild,need).result,'PROTOCOL_COMPATIBLE');
  const err=(fn,code)=>assert.throws(fn,e=>e.code===code);
- err(()=>c.checkProtocolCompatibility(brush.protocolHandshake,[c.protocolRequirement('region-build/v1')]),'UNSUPPORTED_VERSION');
- err(()=>c.checkProtocolCompatibility(brush.protocolHandshake,[c.protocolRequirement(WIRE,[],brush.brushProtocols.find(p=>p.protocol==='region-build').minor+1)]),'UNSUPPORTED_VERSION');
- err(()=>c.checkProtocolCompatibility(brush.protocolHandshake,[c.protocolRequirement(WIRE,['canvas-region/v3:whole-region-undo'])]),'CAPABILITY_UNAVAILABLE');
- err(()=>c.checkProtocolCompatibility(brush.protocolHandshake,[c.protocolRequirement(WIRE,['region-build/v2:compile-mapblock-chunks'])]),'CAPABILITY_UNAVAILABLE');
- err(()=>c.checkProtocolCompatibility(brush.contractHandshake,need),'UNSUPPORTED_VERSION');
+ err(()=>checkProtocolCompatibility(brush.protocolHandshake,[protocolRequirement('region-build/v1')]),'UNSUPPORTED_VERSION');
+ err(()=>checkProtocolCompatibility(brush.protocolHandshake,[protocolRequirement(WIRE,[],brush.brushProtocols.find(p=>p.protocol==='region-build').minor+1)]),'UNSUPPORTED_VERSION');
+ err(()=>checkProtocolCompatibility(brush.protocolHandshake,[protocolRequirement(WIRE,['canvas-region/v3:whole-region-undo'])]),'CAPABILITY_UNAVAILABLE');
+ err(()=>checkProtocolCompatibility(brush.protocolHandshake,[protocolRequirement(WIRE,['region-build/v2:compile-mapblock-chunks'])]),'CAPABILITY_UNAVAILABLE');
+ err(()=>checkProtocolCompatibility(brush.contractHandshake,need),'UNSUPPORTED_VERSION');
  rejects({...fixture.compileRequest,contractVersion:'region-build/v1'},'UNSUPPORTED_VERSION'); // typed error response, zero output
 });
 
 test('validation: catalogue, orientation, world binding, digest binding and pure input; every failure has zero output',()=>{
  const q=request([0,0,0],[2,1,1],[AIR,STONE],[1,0]);
- rejects(request([0,0,0],[2,1,1],[AIR,{materialRef:'fixture:missing',orientation:0}],[1,0]),'CATALOGUE_MISMATCH');
- rejects(request([0,0,0],[2,1,1],[AIR,{materialRef:'fixture:stone',orientation:3}],[1,0]),'UNSUPPORTED_MUTATION_SEMANTICS');
+ rejects(request([0,0,0],[2,1,1],[AIR,{materialRef:'test:missing',orientation:0}],[1,0]),'CATALOGUE_MISMATCH');
+ rejects(request([0,0,0],[2,1,1],[AIR,{materialRef:'doc:solid',orientation:3}],[1,0]),'UNSUPPORTED_MUTATION_SEMANTICS');
  rejects({...q,localContext:{...q.localContext,worldRef:'other-world'}},'CURRENT_WORLD_MISMATCH');
  rejects({...q,buildDigest:'0'.repeat(64)},'NON_CANONICAL_AMBIGUITY');
  rejects({...q,build:{...q.build,block:{...q.build.block,runs:[[1,1],[1,1]]}}},'SCHEMA_INVALID');
@@ -200,7 +200,7 @@ test('validation: catalogue, orientation, world binding, digest binding and pure
  assert.throws(()=>brush.compileRegionBuild(new Proxy(q,{})),e=>e.code==='SCHEMA_INVALID');
 });
 
- test('every chunk binds its canonical block in the region-block domain; SDK rejects tampering',()=>{
+ test('every chunk binds its canonical block in the region-block domain; local contract validator rejects tampering',()=>{
  const q=request([-2,0,0],[20,2,2],[AIR,STONE],new Array(80).fill(1),'digests',{partition:{edge:[4,1,2]}});
  const out=brush.compileRegionBuild(q);assert.equal(out.error,null);assert.ok(out.result.projection.chunks.length>1);
  for(const chunk of out.result.projection.chunks) assert.equal(chunk.blockDigest,D('region-block',chunk.block));
@@ -208,7 +208,7 @@ test('validation: catalogue, orientation, world binding, digest binding and pure
  const altered=structuredClone(out);altered.result.projection.chunks[1].blockDigest='0'.repeat(64);
  assert.throws(()=>D('region-operations',altered.result.projection),e=>e.publicError?.reason==='PAYLOAD_CHANGED');
  assert.throws(()=>c.validateCompiledRegionSet(q,altered));
- const changed=structuredClone(out);changed.result.projection.chunks[1].block.palette[0].materialRef='fixture:dirt';
+ const changed=structuredClone(out);changed.result.projection.chunks[1].block.palette[0].materialRef='test:alternate';
  assert.notEqual(changed.result.projection.chunks[1].blockDigest,D('region-block',changed.result.projection.chunks[1].block));
  assert.throws(()=>c.validateCompiledRegionSet(q,changed));
  });

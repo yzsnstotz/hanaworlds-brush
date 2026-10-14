@@ -1,9 +1,9 @@
 // Pure BUILD/V5 -> operations/v4 compiler. No world connection, no mutation,
 // no persistence, no model access, no clock, no randomness.
 //
-// Every public type, digest and coherence rule comes from the admitted
-// hanaworlds-contracts package (src/contracts.mjs); this module only orders those
-// checks through current public validators and performs the unchanged expansion.
+// Every public type, digest and coherence rule is local to the C-brush v3
+// document closure (src/contracts.mjs); this module orders those checks and
+// performs the unchanged expansion.
 // Materials and orientations are opaque world-source values and pass through as given.
 
 import {

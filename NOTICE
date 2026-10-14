@@ -1,20 +1,19 @@
 HanaWorlds Brush — Copyright (c) 2026 yzsnstotz
 Owned source: MIT (LICENSE).
 
-Development-only SDK; required public validators compiled into dist/contracts.mjs:
-hanaworlds-contracts 2.2.1 — MIT
-Source: https://github.com/yzsnstotz/hanaworlds-contracts/tree/v2.2.1
-Dependency: git+https://github.com/yzsnstotz/hanaworlds-contracts.git#v2.2.1
-Released commit: ee53aed37117bc859d9cbb2aedee9ea7d8dfc8b1
-License text: licenses/hanaworlds-contracts.LICENSE and licenses/hanaworlds-contracts.NOTICE.
-Build inputs and generated SHA-256: build-provenance.json. SDK package and fixtures are not distributed.
+Self-owned validation and declaration closure:
+C-brush/v3 — MIT, the complete public contract document.
+Source: Docs/Projects/hana-world/contracts/C-brush.md
 Use: BUILD/V5, operations/v4, region-build/v2 public types, strict decoding,
 canonical geometry/digests and compiled result validation.
+Normal build copies owned src/ into dist/; schema and metadata remain local resources.
+Source inventory and copied artifact SHA-256: build-provenance.json.
+No retired contracts package, resolver, fixtures or SDK code is distributed.
 
 Installed runtime dependency:
 canonicalize 5.1.0 — Apache-2.0
 Source: https://github.com/erdtman/canonicalize (npm canonicalize@5.1.0)
-License text: node_modules/canonicalize/LICENSE; required unmodified by contracts.
+License text: node_modules/canonicalize/LICENSE; used unmodified by Brush.
 Use: RFC 8785 canonical JSON and production digests.
 
 Development-only dependency: TypeScript 5.8.3 — Apache-2.0
@@ -38,8 +37,6 @@ engine reads/writes and historical argument compatibility are omitted.
 D-14 is a source port. WorldEdit runtime is not bundled (D-15 is separate).
 
 Development-only build/gate dependencies (not shipped):
-esbuild 0.28.2 — MIT — https://github.com/evanw/esbuild
-Use: reproducible tree-shaken compilation of the required SDK runtime closure.
 acorn 8.19.0 — MIT — https://github.com/acornjs/acorn
 Use: parse every shipped JavaScript artifact to audit runtime imports/resources.
 pnpm 11.28.5 — MIT — https://github.com/pnpm/pnpm

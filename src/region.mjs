@@ -6,9 +6,9 @@
 // persistence, model access, clock or randomness. Canvas owns every transaction
 // decision; the world source transports.
 //
-// Every public type, canonical encoding, digest and compatibility rule comes from
-// the admitted hanaworlds-contracts package (src/contracts.mjs); this module only orders those
-// public helpers and performs the chunk split.
+// Public types, canonical encoding and digests are compiled into this plugin
+// from C-brush v3 (src/contracts.mjs); this module orders those local helpers
+// and performs the chunk split.
 
 import {
   ContractError, decodeRawJSON, validateResponse, digestValue, contractProtocols,
@@ -20,7 +20,7 @@ import { requestIdOf, requireSupportedProfiles } from './admit.mjs';
 const WIRE = 'region-build/v2';
 const OPERATION = 'CompileRegionBuild';
 
-/** Protocols this compiler speaks, at the minor the admitted contracts declare. */
+/** Protocols this compiler speaks, at the minor the document metadata declares. */
 export const brushProtocols = Object.freeze(['BUILD', 'region-build'].map(name => {
   const p = contractProtocols.find(x => x.protocol === name);
   if (!p) throw new Error(`brush: admitted contracts lack protocol ${name}`);

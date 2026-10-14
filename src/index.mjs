@@ -17,7 +17,7 @@ export const protocolHandshake = Object.freeze({ profileVersion:'protocol-handsh
  capabilities:brushCapabilities, provenance:Object.freeze({ packageName:name, packageVersion:version, sourceRevision:null, artifactDigest:null }) });
 export const invariants = Object.freeze([
  'PURE_COMPILER: no world connection, read/write, persistence, model access, clock or randomness',
- `STRICT_ADMISSION: contracts@${contractsVersion} strict raw UTF-8/duplicate-key/pure JSON and complete BUILD/V5 and region-build/v2 schemas`,
+ 'STRICT_ADMISSION: self-owned C-brush/v3 strict raw UTF-8/duplicate-key/pure JSON and complete BUILD/V5 and region-build/v2 schemas',
  'GEOMETRY_PROFILE: only voxel-grid/v1 builds, target facts and region blocks are expanded; any other profile is CAPABILITY_GAP/GEOMETRY_PROFILE_UNSUPPORTED before the schema',
  'DIGEST_BINDING: build, catalogue, frame, target facts, safety and compilation config bind their exact payloads',
  'IDENTITY_BINDING: request localContext names its world; observed facts name that world; PLANNED facts name a preceding build',

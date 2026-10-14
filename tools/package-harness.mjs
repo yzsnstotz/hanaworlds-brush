@@ -2,30 +2,28 @@ import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { cpSync, existsSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
-import { randomUUID } from 'node:crypto';
 import { parse } from 'acorn';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { auditArtifact, sha256 } from './artifact-boundary.mjs';
-import { contractsFixtureUrl } from './development-contracts.mjs';
-import * as c from 'hanaworlds-contracts';
+import { buildSample, regionSample } from '../test/legacy-document-fixtures.mjs';
+import * as c from '../src/contracts.mjs';
 
 export const root=fileURLToPath(new URL('..',import.meta.url));
+export const verificationRoot=process.env.BRUSH_VERIFY_TMP??join(root,'../evidence/package-verification');
+mkdirSync(verificationRoot,{recursive:true});
 export const run=(command,args,options={})=>execFileSync(command,args,{cwd:root,encoding:'utf8',stdio:['ignore','pipe','pipe'],...options});
 export const pnpm=join(root,'node_modules/pnpm/bin/pnpm.mjs');
 export function cleanEnv(base) {
  // Package-manager config is isolated from old Profiles; credentials are not read/copied.
  const env={PATH:dirname(process.execPath)+':'+process.env.PATH,HOME:base,
-  XDG_DATA_HOME:join(process.env.HOME,'.local/share'),XDG_CONFIG_HOME:join(base,'config'),XDG_CACHE_HOME:join(base,'cache'),PNPM_HOME:join(base,'pnpm-home'),
-  npm_config_cache:process.env.npm_config_cache??join(process.env.HOME,'.npm')};
+  XDG_DATA_HOME:join(base,'data'),XDG_CONFIG_HOME:join(base,'config'),XDG_CACHE_HOME:join(base,'cache'),PNPM_HOME:join(base,'pnpm-home'),
+  npm_config_cache:process.env.npm_config_cache??join(base,'npm-cache')};
  return env;
 }
 export function normalPack(out) {
  mkdirSync(out,{recursive:true});
- const receipt=join(out,'nested-pack-receipt.json'),nonce=randomUUID();
- writeFileSync(receipt,JSON.stringify({nonce,ownerPid:process.pid,root,consumed:false}),{flag:'wx',mode:0o600});
- const raw=run('npm',['pack','--pack-destination',out,'--json'],{env:{...process.env,BRUSH_BOUNDARY_PACK_RECEIPT:JSON.stringify({receipt,nonce})}});
- assert.equal(JSON.parse(readFileSync(receipt)).consumed,true,'normal npm pack must execute the inner prepack audit');
+ const raw=run('npm',['pack','--pack-destination',out,'--json'],{env:{...process.env,npm_config_cache:process.env.npm_config_cache??join(out,'npm-cache')}});
  writeFileSync(join(out,'normal-prepack.log'),raw);
  const [packed]=JSON.parse(raw.match(/(?:^|\n)(\[\s*\{\s*"id"[\s\S]*)$/)?.[1]??raw);
  const tgz=join(out,packed.filename),extracted=join(out,'extract');mkdirSync(extracted);
@@ -36,13 +34,10 @@ export function normalPack(out) {
  return {packed,tgz,artifact,audit,out};
 }
 export function smokeInputs(entries) {
- const fixture=JSON.parse(readFileSync(new URL(contractsFixtureUrl('main'))));
- const r=fixture.request,b=structuredClone(fixture.response.result.build);
- const config={profileVersion:'compilation-config/v3',writeBackend:{profileId:'static-local',revision:'static-1'},overlapRule:'last-writer-wins',effectOrder:'numeric-x-y-z',compressionRule:'exact-final-effects-only'};
- const q={contractVersion:'BUILD/V5',sessionRef:r.sessionRef,requestId:'brush-packed-production',worldRef:r.worldRef,localContext:r.localContext,build:b,buildDigest:c.digestValue('build',b).sha256,catalogue:r.catalogue,catalogueDigest:b.catalogueDigest,targetFacts:r.targetFacts,targetFactsDigest:r.targetFactsDigest,safetyProfile:r.safetyProfile,safetyProfileDigest:r.safetyProfileDigest,compilationConfig:config,compilationConfigDigest:c.digestValue('compilation-config',config).sha256,compilerRevision:'brush-packed-production'};
- const region=JSON.parse(readFileSync(new URL(contractsFixtureUrl('brush-placement')))).region;
+ const q=structuredClone(buildSample.request);
+ const region={compileRequest:structuredClone(regionSample.request),compileResponse:structuredClone(regionSample.expected)};
  const base=region.compileRequest;
- const empty={materialRef:'source:empty-03',orientation:0},stone={materialRef:'fixture:stone',orientation:0};
+ const empty={materialRef:'source:empty-03',orientation:0},stone={materialRef:'doc:solid',orientation:0};
  const catalogue=structuredClone(base.catalogue);
  catalogue.materials[empty.materialRef]=catalogue.materials[catalogue.emptyMaterialRef];
  delete catalogue.materials[catalogue.emptyMaterialRef];catalogue.emptyMaterialRef=empty.materialRef;
@@ -90,7 +85,7 @@ export async function installAndSmoke(candidate,consumer,{expectFailure=false}={
  }
  writeFileSync(join(consumer,'package.json'),JSON.stringify({name:'brush-production-consumer',private:true,type:'module',dependencies:{'hanaworlds-brush':'file:'+candidate.tgz}},null,2));
  let installation;
- try { installation=invoke(['install','--prod','--reporter=append-only','--store-dir',join(process.env.HOME,'.local/share/pnpm/store')]); }
+ try { installation=invoke(['install','--prod','--reporter=append-only','--store-dir',join(consumer,'pnpm-store')]); }
  catch(error){writeFileSync(join(consumer,'install-failed.log'),String(error.stdout??'')+String(error.stderr??''));throw error;}
  writeFileSync(join(consumer,'install.log'),installation);
  const graph=invoke(['list','--prod','--depth','Infinity','--json']);writeFileSync(join(consumer,'production-graph.json'),graph);
@@ -99,9 +94,9 @@ export async function installAndSmoke(candidate,consumer,{expectFailure=false}={
  assert.ok(!existsSync(join(consumer,'node_modules/hanaworlds-contracts')));
  if(!expectFailure)installedResolutionGraph(candidate,consumer);
  const data=smokeInputs(candidate.audit.entries);
- // Expected responses are independently admitted by the public development validators.
+ // Literal published success expectations are independent of compiler output.
  const b=await import('../dist/index.mjs');
- data.buildResponse=b.compileBuildDocument(data.build);c.validateBoundResponse('BUILD/V5','BuildDocument',data.build,data.buildResponse);
+ data.buildResponse=structuredClone(buildSample.expected);c.validateBoundResponse('BUILD/V5','BuildDocument',data.build,data.buildResponse);
  data.regionResponse=data.region.compileResponse;data.region=data.region.compileRequest;
  data.customResponse=b.compileRegionBuild(data.customRegion);c.validateCompiledRegionSet(data.customRegion,data.customResponse);
  writeFileSync(join(consumer,'inputs.json'),JSON.stringify(data));

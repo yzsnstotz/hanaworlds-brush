@@ -1,6 +1,6 @@
-/** Type consumers install the admitted contracts tag as a direct devDependency. No value import is supported. */
-import type { BuildDocumentRequest, BuildDocumentResponse, SetBox, MaterialMap, Effects, ContractHandshake, CompileRegionBuildRequest, CompileRegionBuildResponse, ProtocolHandshake, ProtocolDescriptor, GeometryProfile } from 'hanaworlds-contracts';
-export type { BuildDocumentRequest, BuildDocumentResponse } from 'hanaworlds-contracts';
+/** Public declarations are closed within this package. */
+import type { BuildDocumentRequest, BuildDocumentResponse, SetBox, MaterialMap, Effects, ContractHandshake, CompileRegionBuildRequest, CompileRegionBuildResponse, ProtocolHandshake, ProtocolDescriptor, GeometryProfile } from './contracts.d.mts';
+export type * from './contracts.d.mts';
 export declare function compileBuildDocument(value: BuildDocumentRequest): BuildDocumentResponse;
 export declare function compileBuildDocumentBytes(bytes: Uint8Array): BuildDocumentResponse;
 /** Caller validates geometry/materials before using the low-level expander. */
@@ -29,7 +29,7 @@ export declare function apply(ctx: {provide(name: typeof serviceName, service: B
 declare const plugin: {name:typeof name;inject:typeof inject;provide:typeof provide;apply:typeof apply};
 export default plugin;
 /** region-build/v2 CompileRegionBuild: region-operations/v2 chunks cut along the request partition. */
-export type { CompileRegionBuildRequest, CompileRegionBuildResponse, ProtocolHandshake } from 'hanaworlds-contracts';
+export type { CompileRegionBuildRequest, CompileRegionBuildResponse, ProtocolHandshake } from './contracts.d.mts';
 export declare function compileRegionBuild(request: CompileRegionBuildRequest): CompileRegionBuildResponse;
 export declare function compileRegionBuildBytes(bytes: Uint8Array): CompileRegionBuildResponse;
 export declare const protocolHandshake: ProtocolHandshake;

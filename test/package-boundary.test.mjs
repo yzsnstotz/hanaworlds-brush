@@ -1,13 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { cpSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { root } from '../tools/package-harness.mjs';
+import { root, verificationRoot } from '../tools/package-harness.mjs';
 import { auditArtifact } from '../tools/artifact-boundary.mjs';
 import { normalPack, installAndSmoke, run, pnpm, cleanEnv } from '../tools/package-harness.mjs';
 
-const out=mkdtempSync(join(process.env.BRUSH_VERIFY_TMP??tmpdir(),'brush-boundary-'));
+const out=mkdtempSync(join(verificationRoot,'brush-boundary-'));
 const candidate=normalPack(join(out,'normal-pack'));
 const negative=(name,edit)=>{
  const dir=join(out,name);mkdirSync(dir);cpSync(candidate.artifact,join(dir,'package'),{recursive:true});
@@ -22,7 +21,7 @@ test('real normal tgz installs under pnpm 11.28.5 default strict policy and comp
  console.log(JSON.stringify({evidence:'REAL_TGZ/PRODUCTION/PURE_CAPABILITY',directory:out,output:result.output.trim()}));
 });
 for(const field of ['dependencies','peerDependencies','optionalDependencies'])test('tgz rejects contracts in '+field,()=>{
- const bad=negative(field,dir=>manifest(dir,p=>{p[field]??={};p[field]['hanaworlds-contracts']=p.devDependencies['hanaworlds-contracts'];}));
+ const bad=negative(field,dir=>manifest(dir,p=>{p[field]??={};p[field]['hanaworlds-contracts']='git+https://github.com/yzsnstotz/hanaworlds-contracts.git#v2.2.1';}));
  assert.throws(()=>auditArtifact(bad.artifact),/production contracts dependency/);
 });
 for(const [name,source,pattern] of [
@@ -46,13 +45,13 @@ for(const [name,source,pattern] of [
  const bad=negative(name,dir=>writeFileSync(join(dir,'dist/index.mjs'),source));
  assert.throws(()=>auditArtifact(bad.artifact),pattern);
 });
-test('wrong build-source commit is rejected in the real tgz',()=>{
- const bad=negative('wrong-source',dir=>{const path=join(dir,'build-provenance.json'),p=JSON.parse(readFileSync(path));p.sourceCommit='0'.repeat(40);writeFileSync(path,JSON.stringify(p));});
+test('wrong owned contract identity is rejected in the real tgz',()=>{
+ const bad=negative('wrong-source',dir=>{const path=join(dir,'build-provenance.json'),p=JSON.parse(readFileSync(path));p.source.contract='C-brush/v0';writeFileSync(path,JSON.stringify(p));});
  assert.throws(()=>auditArtifact(bad.artifact),/wrong build source/);
 });
-test('wrong resolved repository source is rejected in the real tgz',()=>{
- const bad=negative('wrong-resolved-source',dir=>{const path=join(dir,'build-provenance.json'),p=JSON.parse(readFileSync(path));p.resolved=p.resolved.replace('github.com/yzsnstotz','github.com/wrong-provider');writeFileSync(path,JSON.stringify(p));});
- assert.throws(()=>auditArtifact(bad.artifact),/wrong resolved source/);
+test('wrong document schema identity is rejected in the real tgz',()=>{
+ const bad=negative('wrong-resolved-source',dir=>{const path=join(dir,'build-provenance.json'),p=JSON.parse(readFileSync(path));p.source.schemaSha256='0'.repeat(64);writeFileSync(path,JSON.stringify(p));});
+ assert.throws(()=>auditArtifact(bad.artifact),/wrong own contract resource hash/);
 });
 test('package imports cannot retain dormant contracts runtime mapping',()=>{
  const bad=negative('imports-map',dir=>manifest(dir,p=>p.imports={'#contracts':'hanaworlds-contracts'}));
@@ -75,14 +74,14 @@ test('a nested resolvable SDK package cannot be distributed',()=>{
  assert.throws(()=>auditArtifact(bad.artifact),/nested contracts package/);
 });
 test('actual strict pnpm install rejects the old transitive git SDK dependency',()=>{
- const bad=negative('exotic-runtime',dir=>manifest(dir,p=>p.dependencies['hanaworlds-contracts']=p.devDependencies['hanaworlds-contracts']));
+ const bad=negative('exotic-runtime',dir=>manifest(dir,p=>p.dependencies['hanaworlds-contracts']='git+https://github.com/yzsnstotz/hanaworlds-contracts.git#v2.2.1'));
  const consumer=join(out,'exotic-production');mkdirSync(consumer);writeFileSync(join(consumer,'package.json'),JSON.stringify({private:true,dependencies:{'hanaworlds-brush':'file:'+bad.tgz}}));
- let error;try{run(process.execPath,[pnpm,'install','--prod','--reporter=append-only','--store-dir',join(process.env.HOME,'.local/share/pnpm/store')],{cwd:consumer,env:cleanEnv(consumer)});}catch(e){error=e;}
+ let error;try{run(process.execPath,[pnpm,'install','--prod','--reporter=append-only','--store-dir',join(consumer,'pnpm-store')],{cwd:consumer,env:cleanEnv(consumer)});}catch(e){error=e;}
  assert.ok(error,'pnpm must reject transitive git');
  const log=String(error.stdout??'')+String(error.stderr??'');writeFileSync(join(consumer,'install-failed.log'),log);
  assert.match(log,/ERR_PNPM.*EXOTIC|exotic.*subdepend|not.*allowed.*git/is);
 });
-test('actual production installation and loading fail if the generated SDK bundle is omitted',async()=>{
+test('actual production installation and loading fail if the self-owned contract implementation is omitted',async()=>{
  const bad=negative('missing-bundle',dir=>rmSync(join(dir,'dist/contracts.mjs')));
  assert.throws(()=>auditArtifact(bad.artifact),/unpacked local dependency/);
  await installAndSmoke(bad,join(out,'missing-production'),{expectFailure:true});
@@ -96,23 +95,34 @@ test('strictDepBuilds actually rejects a dependency with an unapproved install s
  const bad=negative('unapproved-build',dir=>manifest(dir,p=>p.scripts.postinstall='node -e "process.exit(0)"'));
  const consumer=join(out,'unapproved-production');mkdirSync(consumer);
  writeFileSync(join(consumer,'package.json'),JSON.stringify({private:true,dependencies:{'hanaworlds-brush':'file:'+bad.tgz}}));
- let error;try{run(process.execPath,[pnpm,'install','--prod','--reporter=append-only','--store-dir',join(process.env.HOME,'.local/share/pnpm/store')],{cwd:consumer,env:cleanEnv(consumer)});}catch(e){error=e;}
+ let error;try{run(process.execPath,[pnpm,'install','--prod','--reporter=append-only','--store-dir',join(consumer,'pnpm-store')],{cwd:consumer,env:cleanEnv(consumer)});}catch(e){error=e;}
  assert.ok(error,'default strictDepBuilds must reject unapproved dependency scripts');
  const log=String(error.stdout??'')+String(error.stderr??'');writeFileSync(join(consumer,'install-failed.log'),log);
  assert.match(log,/ERR_PNPM_IGNORED_BUILDS|unreviewed|not.*approved|not.*allowed.*build/is);
 });
-for(const name of ['missing-sdk','wrong-dev-source','wrong-lock-source','edited-sdk','extra-sdk-file'])test('development supply validation actually rejects '+name,()=>{
+for(const name of ['missing-local-schema','wrong-owned-contract-identity','wrong-lock-source','edited-owned-type','extra-source-file'])test('self-owned source validation actually rejects '+name,()=>{
  const dev=join(out,name);mkdirSync(join(dev,'tools'),{recursive:true});
  for(const f of ['package.json','package-lock.json','tools/development-contracts.mjs','tools/verify-contracts-artifact.mjs'])cpSync(join(root,f),join(dev,f));
- if(name!=='missing-sdk')cpSync(join(root,'node_modules/hanaworlds-contracts'),join(dev,'node_modules/hanaworlds-contracts'),{recursive:true});
- if(name==='wrong-dev-source')manifest(dev,p=>p.devDependencies['hanaworlds-contracts']=p.devDependencies['hanaworlds-contracts'].replace('v2.2.1','v2.2.0'));
- if(name==='wrong-lock-source'){const path=join(dev,'package-lock.json'),lock=JSON.parse(readFileSync(path));lock.packages['node_modules/hanaworlds-contracts'].resolved=lock.packages['node_modules/hanaworlds-contracts'].resolved.replace('github.com/yzsnstotz','github.com/wrong-provider');writeFileSync(path,JSON.stringify(lock));}
- if(name==='edited-sdk'){const f=join(dev,'node_modules/hanaworlds-contracts/dist/local/index.mjs');writeFileSync(f,readFileSync(f,'utf8')+'\n// deliberately edited SDK\n');}
- if(name==='extra-sdk-file')writeFileSync(join(dev,'node_modules/hanaworlds-contracts/dist/local/injected.mjs'),'export const injected = true;\n');
+ for(const directory of ['src','types'])cpSync(join(root,directory),join(dev,directory),{recursive:true});
+ if(name==='missing-local-schema')rmSync(join(dev,'src/contract-schema.json'));
+ if(name==='wrong-owned-contract-identity'){
+  const path=join(dev,'src/contract-schema.json'),schema=JSON.parse(readFileSync(path));
+  schema['x-contract']='C-brush/v0';writeFileSync(path,JSON.stringify(schema));
+ }
+ if(name==='wrong-lock-source'){
+  const path=join(dev,'package-lock.json'),lock=JSON.parse(readFileSync(path));
+  lock.packages['node_modules/hanaworlds-contracts']={version:'2.2.1',resolved:'git+https://github.com/yzsnstotz/hanaworlds-contracts.git#v2.2.1',dev:true};
+  writeFileSync(path,JSON.stringify(lock));
+ }
+ if(name==='edited-owned-type'){
+  const path=join(dev,'types/contracts.d.mts');writeFileSync(path,readFileSync(path,'utf8')+'\n// deliberately edited own type closure\n');
+ }
+ if(name==='extra-source-file')writeFileSync(join(dev,'src/injected.mjs'),'export const injected = true;\n');
  let error;try{run(process.execPath,[join(dev,'tools/verify-contracts-artifact.mjs'),dev]);}catch(e){error=e;}
- assert.ok(error,'bad development supply must fail');
+ assert.ok(error,'bad self-owned source supply must fail');
  const log=String(error.stdout??'')+String(error.stderr??'');writeFileSync(join(dev,'verify-failed.log'),log);
- if(name==='missing-sdk')assert.match(log,/ERR_MODULE_NOT_FOUND/);else assert.match(log,/"match": false/);
+ const reasons={'missing-local-schema':/ENOENT/,'wrong-owned-contract-identity':/wrong local contract identity/,'wrong-lock-source':/retired supplier lock/,'edited-owned-type':/changed local declaration closure/,'extra-source-file':/unexpected local source closure/};
+ assert.match(log,reasons[name]);
 });
 
 test('a boolean environment switch cannot bypass the real tgz gate',()=>{

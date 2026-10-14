@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "license": "MIT AND AGPL-3.0-only",
-  "description": "Pure deterministic BUILD/V5 and region-build/v2 compiler; contracts v2.2.1, no world mutation",
+  "description": "Pure deterministic BUILD/V5 and region-build/v2 compiler; self-owned C-brush/v3, no world mutation",
   "repository": {
     "type": "git",
     "url": "https://github.com/yzsnstotz/hanaworlds-brush.git"
@@ -22,7 +22,6 @@
   "files": [
     "dist/",
     "types/",
-    "licenses/",
     "build-provenance.json",
     "cordis.patch.yml",
     "GADGET.md",
@@ -36,8 +35,8 @@
     }
   },
   "scripts": {
-    "build": "npm run verify:contracts && node tools/build.mjs && npm run test:package-boundary",
-    "test": "npm run verify:contracts && node tools/build.mjs && node --test test/development-supply.test.mjs test/local-build.test.mjs test/region.test.mjs test/image-contracts.test.mjs test/shapes.test.mjs test/package.test.mjs && npm run test:package-boundary",
+    "build": "npm run verify:contracts && node tools/build.mjs",
+    "test": "npm run build && node --test test/development-supply.test.mjs test/canonical-prototype.test.mjs test/local-build.test.mjs test/region.test.mjs test/image-contracts.test.mjs test/shapes.test.mjs test/package.test.mjs && npm run test:package-boundary",
     "verify:contracts": "node tools/verify-contracts-artifact.mjs",
     "pack:artifact": "npm pack --pack-destination artifacts --json",
     "typecheck": "tsc --noEmit --strict --module nodenext --moduleResolution nodenext --target es2022 test/consumer.mts",
@@ -50,9 +49,7 @@
   "types": "./types/index.d.mts",
   "devDependencies": {
     "acorn": "8.19.0",
-    "esbuild": "0.28.2",
     "pnpm": "11.28.5",
-    "typescript": "5.8.3",
-    "hanaworlds-contracts": "git+https://github.com/yzsnstotz/hanaworlds-contracts.git#v2.2.1"
+    "typescript": "5.8.3"
   }
 }

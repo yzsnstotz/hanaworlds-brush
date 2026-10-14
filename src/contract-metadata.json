@@ -1,0 +1,47 @@
+{
+  "scope": "EXISTING_BRUSH_PACKAGE_METADATA_ONLY_NOT_NEW_C_BRUSH_OPERATIONS",
+  "sourceVersion": "2.2.1",
+  "legacyContractHandshake": {
+    "contracts": "hanaworlds-contracts@2.2.1",
+    "wireVersions": [
+      "BUILD/V5",
+      "ReferenceBrief/v5",
+      "canvas-region/v3",
+      "canvas/v7",
+      "interaction-surface/v5",
+      "painter-region/v3",
+      "painter/v6",
+      "region-build/v2",
+      "session/v5",
+      "world-adapter-region/v3",
+      "world-adapter/v8",
+      "world-facts/v1",
+      "world-inspection/v1"
+    ],
+    "compiledOperationsVersion": "operations/v4",
+    "factProfiles": [
+      "target-facts/v5"
+    ]
+  },
+  "brushProtocols": [
+    {
+      "protocol": "BUILD",
+      "major": 5,
+      "minor": 0
+    },
+    {
+      "protocol": "region-build",
+      "major": 2,
+      "minor": 1
+    }
+  ],
+  "capabilities": [
+    "BUILD/V5:per-cell-compile",
+    "region-build/v2:compile-partition-chunks"
+  ],
+  "sourceInventorySha256": "d6bc03848d95ea94ba07b0cbe05bd67f1031aca84a7ce0c154e41238324199b6",
+  "sdkRestore": false,
+  "newConsumers": [],
+  "authority": "NONE",
+  "packageProvenance": "original package.json identity; sourceRevision and artifactDigest remain null"
+}
